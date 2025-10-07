@@ -1,4 +1,4 @@
--- BatHUB Script - Versão Mobile Otimizada
+-- SharkHUB Script - Versão Premium com UI Renovada
 -- Serviços principais
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -75,25 +75,25 @@ local Settings = {
     Jump = {enabled = false, value = 90},
     FloatV1 = {enabled = false}, 
     FloatV2 = {enabled = false}, 
-    ESP = {enabled = false, color = Color3.fromRGB(255, 100, 255), highlights = {}, nametags = {}},
+    ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
     ESPBetter = {enabled = false},
     AntiHit = {enabled = false}
 }
 
--- Paleta de cores para ESP - NOMES CURTOS PARA CABER
+-- Paleta de cores para ESP - Tema oceânico
 local ColorPalette = {
-    {name = "Verm", color = Color3.fromRGB(255, 80, 80)},
-    {name = "Verde", color = Color3.fromRGB(80, 255, 80)},
-    {name = "Azul", color = Color3.fromRGB(80, 120, 255)},
-    {name = "Amar", color = Color3.fromRGB(255, 255, 80)},
-    {name = "Roxo", color = Color3.fromRGB(255, 80, 255)},
-    {name = "Lara", color = Color3.fromRGB(255, 165, 80)},
-    {name = "Marr", color = Color3.fromRGB(165, 100, 80)},
-    {name = "Bran", color = Color3.fromRGB(255, 255, 255)},
-    {name = "Pret", color = Color3.fromRGB(40, 40, 40)},
-    {name = "Rosa", color = Color3.fromRGB(255, 192, 203)},
-    {name = "Cian", color = Color3.fromRGB(80, 255, 255)},
-    {name = "Viol", color = Color3.fromRGB(138, 43, 226)}
+    {name = "Ocean", color = Color3.fromRGB(0, 162, 232)},
+    {name = "Deep", color = Color3.fromRGB(0, 100, 148)},
+    {name = "Aqua", color = Color3.fromRGB(0, 255, 255)},
+    {name = "Coral", color = Color3.fromRGB(255, 127, 80)},
+    {name = "Pearl", color = Color3.fromRGB(240, 240, 240)},
+    {name = "Kelp", color = Color3.fromRGB(34, 139, 34)},
+    {name = "Sand", color = Color3.fromRGB(238, 203, 173)},
+    {name = "Storm", color = Color3.fromRGB(70, 70, 110)},
+    {name = "Blood", color = Color3.fromRGB(220, 20, 60)},
+    {name = "Night", color = Color3.fromRGB(25, 25, 112)},
+    {name = "Foam", color = Color3.fromRGB(176, 224, 230)},
+    {name = "Reef", color = Color3.fromRGB(127, 255, 212)}
 }
 
 -- Configurações padrão para reset
@@ -102,12 +102,12 @@ local DefaultSettings = {
     Jump = {enabled = false, value = 90},
     FloatV1 = {enabled = false},
     FloatV2 = {enabled = false},
-    ESP = {enabled = false, color = Color3.fromRGB(255, 100, 255)},
+    ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232)},
     ESPBetter = {enabled = false},
     AntiHit = {enabled = false}
 }
 
-local CONFIG_FILE_NAME = "BatHUB_Config.json"
+local CONFIG_FILE_NAME = "SharkHUB_Config.json"
 
 -- Função otimizada para parsear valores monetários
 local function parseValue(text)
@@ -124,7 +124,7 @@ end
 local currentESP = nil
 local highlights = {}
 
--- ESP Better - Otimizado para 10 FPS ao invés de 60 FPS
+-- ESP Better - Otimizado
 local function setupESPBetter()
     ConnectionManager:remove("ESPBetter")
     StateManager:set("bestESP", Settings.ESPBetter.enabled)
@@ -208,7 +208,7 @@ local function setupESPBetter()
                 
                 local back = Instance.new("Frame")
                 back.BackgroundTransparency = 0.18
-                back.BackgroundColor3 = Color3.fromRGB(24, 26, 34)
+                back.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
                 back.Size = UDim2.new(1, 0, 1, 0)
                 back.Position = UDim2.new(0.5, 0, 0.5, 0)
                 back.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -222,7 +222,7 @@ local function setupESPBetter()
                 textLabel.Size = UDim2.new(0.9, 0, 0.9, 0)
                 textLabel.Position = UDim2.new(0.05, 0, 0.05, 0)
                 textLabel.BackgroundTransparency = 1
-                textLabel.TextColor3 = Color3.new(1, 1, 0)
+                textLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
                 textLabel.TextScaled = true
                 textLabel.Font = Enum.Font.GothamBold
                 textLabel.Text = string.format("%s | %s | %s", bestAnimal.nome, bestAnimal.raridade, bestAnimal.porSegundo)
@@ -237,8 +237,8 @@ local function setupESPBetter()
                     for _, d in ipairs(decorations:GetDescendants()) do
                         local hl = Instance.new("Highlight")
                         hl.Name = "ESP_Deco"
-                        hl.FillColor = Color3.fromRGB(0, 100, 255)
-                        hl.OutlineColor = Color3.fromRGB(0, 60, 200)
+                        hl.FillColor = Color3.fromRGB(0, 162, 232)
+                        hl.OutlineColor = Color3.fromRGB(0, 100, 148)
                         hl.FillTransparency = 0
                         hl.Parent = d
                         highlights[d] = hl
@@ -259,7 +259,7 @@ local function setupESPBetter()
     end
 end
 
--- Sistema Anti-Hit (Desync) - Integrado e Funcional
+-- Sistema Anti-Hit (Desync)
 local function setupAntiHit()
     ConnectionManager:remove("AntiHit")
     StateManager:set("antiHit", Settings.AntiHit.enabled)
@@ -294,7 +294,7 @@ local function setupAntiHit()
                     return false
                 end
 
-                -- Procurar pela ferramenta (Quantum Cloner, Brainrot, etc.)
+                -- Procurar pela ferramenta
                 local toolNames = {"Quantum Cloner", "Brainrot", "brainrot"}
                 local tool = nil
                 
@@ -458,14 +458,17 @@ local function setupESPPlayers()
     end
 end
 
--- Sistema de configuração
+-- Sistema de configuração CORRIGIDO
 local function saveConfig()
     local configToSave = {
         Speed = {enabled = Settings.Speed.enabled, value = Settings.Speed.value},
         Jump = {enabled = Settings.Jump.enabled, value = Settings.Jump.value},
         FloatV1 = {enabled = Settings.FloatV1.enabled},
         FloatV2 = {enabled = Settings.FloatV2.enabled},
-        ESP = {enabled = Settings.ESP.enabled, color = {Settings.ESP.color.R, Settings.ESP.color.G, Settings.ESP.color.B}},
+        ESP = {
+            enabled = Settings.ESP.enabled, 
+            color = {Settings.ESP.color.R * 255, Settings.ESP.color.G * 255, Settings.ESP.color.B * 255}
+        },
         ESPBetter = {enabled = Settings.ESPBetter.enabled},
         AntiHit = {enabled = Settings.AntiHit.enabled}
     }
@@ -487,21 +490,63 @@ local function loadConfig()
             return HttpService:JSONDecode(readfile(CONFIG_FILE_NAME))
         end)
         
-        if success and decoded then return decoded end
+        if success and decoded then
+            -- Aplicar configurações carregadas
+            if decoded.Speed then
+                Settings.Speed.enabled = decoded.Speed.enabled or false
+                Settings.Speed.value = decoded.Speed.value or 50
+            end
+            if decoded.Jump then
+                Settings.Jump.enabled = decoded.Jump.enabled or false
+                Settings.Jump.value = decoded.Jump.value or 90
+            end
+            if decoded.FloatV1 then
+                Settings.FloatV1.enabled = decoded.FloatV1.enabled or false
+            end
+            if decoded.FloatV2 then
+                Settings.FloatV2.enabled = decoded.FloatV2.enabled or false
+            end
+            if decoded.ESP then
+                Settings.ESP.enabled = decoded.ESP.enabled or false
+                if decoded.ESP.color then
+                    Settings.ESP.color = Color3.fromRGB(decoded.ESP.color[1], decoded.ESP.color[2], decoded.ESP.color[3])
+                end
+            end
+            if decoded.ESPBetter then
+                Settings.ESPBetter.enabled = decoded.ESPBetter.enabled or false
+            end
+            if decoded.AntiHit then
+                Settings.AntiHit.enabled = decoded.AntiHit.enabled or false
+            end
+            
+            -- Aplicar configurações carregadas
+            if Settings.Speed.enabled then
+                ConnectionManager:add("Speed", RunService.Heartbeat:Connect(function()
+                    local char = LocalPlayer.Character
+                    if not char then return end
+                    local humanoid = Cache:get(char, "Humanoid")
+                    local rootPart = Cache:get(char, "HumanoidRootPart")
+                    if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
+                        local velocity = humanoid.MoveDirection * Settings.Speed.value
+                        rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
+                    end
+                end))
+            end
+            
+            if Settings.FloatV1.enabled then setupFloatV1() end
+            if Settings.FloatV2.enabled then setupFloatV2() end
+            if Settings.ESP.enabled then setupESPPlayers() end
+            if Settings.ESPBetter.enabled then setupESPBetter() end
+            if Settings.AntiHit.enabled then setupAntiHit() end
+            
+            return true
+        end
     end
-    return nil
+    return false
 end
 
 local function resetConfig()
-    -- Restaurar configurações padrão
-    for key, value in pairs(DefaultSettings) do
-        Settings[key] = {}
-        for subKey, subValue in pairs(value) do
-            Settings[key][subKey] = subValue
-        end
-    end
-    
-    -- Limpar conexões
+    -- Limpar todas as funções ativas
     ConnectionManager:cleanup()
     
     -- Limpar ESP Players
@@ -511,8 +556,6 @@ local function resetConfig()
     for _, nametag in pairs(Settings.ESP.nametags) do
         if nametag and nametag.Parent then nametag:Destroy() end
     end
-    Settings.ESP.highlights = {}
-    Settings.ESP.nametags = {}
     
     -- Limpar ESP Better
     if currentESP then
@@ -523,6 +566,17 @@ local function resetConfig()
         if hl and hl.Parent then hl:Destroy() end
     end
     highlights = {}
+    
+    -- Resetar configurações
+    Settings = {
+        Speed = {enabled = false, value = 50},
+        Jump = {enabled = false, value = 90},
+        FloatV1 = {enabled = false}, 
+        FloatV2 = {enabled = false}, 
+        ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
+        ESPBetter = {enabled = false},
+        AntiHit = {enabled = false}
+    }
     
     -- Reset estados
     StateManager:set("floatV1", false)
@@ -538,21 +592,25 @@ local function resetConfig()
     end)
     
     Cache:clear()
+    
+    -- Deletar arquivo de configuração
+    if isfile(CONFIG_FILE_NAME) then
+        delfile(CONFIG_FILE_NAME)
+    end
+    
     return true
 end
 
--- Função para UI responsiva PERFEITAMENTE PROPORCIONADA
+-- Função para UI responsiva
 local function getResponsiveSize()
     local viewport = Workspace.CurrentCamera.ViewportSize
     local mobile = isMobile()
     
     if mobile then
-        -- TAMANHOS PERFEITAMENTE CALCULADOS PARA MOBILE
-        local width = math.min(viewport.X * 0.70, 240) -- 240px max
-        local height = math.min(viewport.Y * 0.55, 260) -- 260px max  
+        local width = math.min(viewport.X * 0.70, 240)
+        local height = math.min(viewport.Y * 0.55, 260)
         return {width = width, height = height}
     else
-        -- Desktop
         local isSmallScreen = viewport.X < 800 or viewport.Y < 600
         return isSmallScreen 
             and {width = math.min(viewport.X * 0.9, 350), height = math.min(viewport.Y * 0.85, 480)}
@@ -612,34 +670,44 @@ end
 
 -- Limpar GUI existente
 local function cleanupExistingGUI()
-    local existingGUI = PlayerGui:FindFirstChild("BatHUBScriptGUI")
+    local existingGUI = PlayerGui:FindFirstChild("SharkHUBScriptGUI")
     if existingGUI then
         existingGUI:Destroy()
         task.wait(0.1)
     end
 end
 
--- Criar Toggle com Slider PERFEITAMENTE PROPORCIONADO
-local function createToggleAndSlider(parent, toggleText, sliderText, min, max, defaultValue, toggleCallback, sliderCallback)
+-- Criar Toggle com Slider TEMA SHARK
+local function createToggleAndSlider(parent, toggleText, sliderText, min, max, defaultValue, toggleCallback, sliderCallback, currentEnabled, currentValue)
     local mobile = isMobile()
-    local containerHeight = mobile and 55 or 95 -- PROPORÇÃO PERFEITA
+    local containerHeight = mobile and 55 or 95
     
     local container = Instance.new("Frame")
     container.Size = UDim2.new(1, 0, 0, containerHeight)
-    container.BackgroundColor3 = Color3.fromRGB(20, 10, 25)
+    container.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
     container.BorderSizePixel = 0
     container.Parent = parent
 
     local containerCorner = Instance.new("UICorner")
-    containerCorner.CornerRadius = UDim.new(0, 4)
+    containerCorner.CornerRadius = UDim.new(0, 8)
     containerCorner.Parent = container
 
     local containerStroke = Instance.new("UIStroke")
-    containerStroke.Color = Color3.fromRGB(138, 43, 226)
+    containerStroke.Color = Color3.fromRGB(0, 162, 232)
     containerStroke.Thickness = 1
+    containerStroke.Transparency = 0.5
     containerStroke.Parent = container
 
-    -- Toggle superior PERFEITAMENTE PROPORCIONADO
+    -- Efeito gradient oceânico
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
+    }
+    gradient.Rotation = 90
+    gradient.Parent = container
+
+    -- Toggle superior
     local toggle = Instance.new("Frame")
     toggle.Size = UDim2.new(1, -8, 0, mobile and 22 or 45)
     toggle.Position = UDim2.new(0, 4, 0, 2)
@@ -647,10 +715,10 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     toggle.Parent = container
 
     local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(0.45, 0, 1, 0) -- MENOR PARA CABER
+    toggleLabel.Size = UDim2.new(0.45, 0, 1, 0)
     toggleLabel.BackgroundTransparency = 1
     toggleLabel.Text = toggleText
-    toggleLabel.TextColor3 = Color3.fromRGB(200, 162, 255)
+    toggleLabel.TextColor3 = Color3.fromRGB(176, 224, 230)
     toggleLabel.TextSize = mobile and 8 or 18
     toggleLabel.Font = Enum.Font.GothamBold
     toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -661,8 +729,8 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0, mobile and 35 or 70, 0, mobile and 18 or 35)
     toggleButton.Position = UDim2.new(1, mobile and -38 or -75, 0, mobile and 2 or 5)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    toggleButton.Text = "OFF"
+    toggleButton.BackgroundColor3 = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
+    toggleButton.Text = currentEnabled and "ON" or "OFF"
     toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     toggleButton.TextSize = mobile and 7 or 14
     toggleButton.Font = Enum.Font.GothamBold
@@ -674,23 +742,25 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     toggleCorner.Parent = toggleButton
 
     local toggleGlow = Instance.new("UIStroke")
-    toggleGlow.Color = Color3.fromRGB(150, 0, 0)
-    toggleGlow.Thickness = 1
+    toggleGlow.Color = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
+    toggleGlow.Thickness = 2
     toggleGlow.Transparency = 0.5
     toggleGlow.Parent = toggleButton
 
-    -- Slider inferior PERFEITAMENTE PROPORCIONADO
+    -- Slider inferior
     local slider = Instance.new("Frame")
     slider.Size = UDim2.new(1, -8, 0, mobile and 12 or 30)
     slider.Position = UDim2.new(0, 4, 0, mobile and 27 or 55)
     slider.BackgroundTransparency = 1
     slider.Parent = container
 
+    local sliderValue = currentValue or defaultValue
+    
     local sliderLabel = Instance.new("TextLabel")
-    sliderLabel.Size = UDim2.new(0.25, 0, 1, 0) -- MUITO MENOR
+    sliderLabel.Size = UDim2.new(0.25, 0, 1, 0)
     sliderLabel.BackgroundTransparency = 1
-    sliderLabel.Text = sliderText .. ": " .. tostring(defaultValue)
-    sliderLabel.TextColor3 = Color3.fromRGB(180, 140, 230)
+    sliderLabel.Text = sliderText .. ": " .. tostring(sliderValue)
+    sliderLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
     sliderLabel.TextSize = mobile and 5 or 14
     sliderLabel.Font = Enum.Font.Gotham
     sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -698,15 +768,15 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     sliderLabel.Parent = slider
 
     local sliderBar = Instance.new("Frame")
-    sliderBar.Size = UDim2.new(0.70, 0, 0, mobile and 6 or 10) -- PROPORÇÃO PERFEITA
+    sliderBar.Size = UDim2.new(0.70, 0, 0, mobile and 6 or 10)
     sliderBar.Position = UDim2.new(0.28, 0, 0, mobile and 3 or 10)
-    sliderBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    sliderBar.BackgroundColor3 = Color3.fromRGB(20, 40, 60)
     sliderBar.BorderSizePixel = 0
     sliderBar.Parent = slider
 
     local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((defaultValue - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    sliderFill.Size = UDim2.new((sliderValue - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 162, 232)
     sliderFill.BorderSizePixel = 0
     sliderFill.Parent = sliderBar
 
@@ -720,14 +790,21 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
 
     local sliderThumb = Instance.new("Frame")
     sliderThumb.Size = UDim2.new(0, mobile and 10 or 16, 0, mobile and 10 or 16)
-    sliderThumb.Position = UDim2.new((defaultValue - min) / (max - min), -5, 0, -2)
-    sliderThumb.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    sliderThumb.Position = UDim2.new((sliderValue - min) / (max - min), -5, 0, -2)
+    sliderThumb.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
     sliderThumb.BorderSizePixel = 0
     sliderThumb.Parent = sliderBar
 
     local thumbCorner = Instance.new("UICorner")
-    thumbCorner.CornerRadius = UDim.new(0, 5)
+    thumbCorner.CornerRadius = UDim.new(0, 8)
     thumbCorner.Parent = sliderThumb
+
+    -- Efeito de brilho no thumb
+    local thumbGlow = Instance.new("UIStroke")
+    thumbGlow.Color = Color3.fromRGB(0, 255, 255)
+    thumbGlow.Thickness = 1
+    thumbGlow.Transparency = 0.5
+    thumbGlow.Parent = sliderThumb
 
     local sliderButton = Instance.new("TextButton")
     sliderButton.Size = UDim2.new(1, 0, 1, 10)
@@ -736,18 +813,17 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     sliderButton.Text = ""
     sliderButton.Parent = sliderBar
 
-    -- Lógica do slider com suporte a touch
+    -- Lógica do slider
     local dragging = false
-    local isEnabled = false
-    local currentValue = defaultValue
+    local isEnabled = currentEnabled or false
 
     local function updateSlider(position)
         local relativeX = math.clamp((position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
-        currentValue = math.floor(min + (max - min) * relativeX)
+        sliderValue = math.floor(min + (max - min) * relativeX)
         sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
         sliderThumb.Position = UDim2.new(relativeX, -5, 0, -2)
-        sliderLabel.Text = sliderText .. ": " .. tostring(currentValue)
-        if sliderCallback then sliderCallback(currentValue) end
+        sliderLabel.Text = sliderText .. ": " .. tostring(sliderValue)
+        if sliderCallback then sliderCallback(sliderValue) end
     end
 
     -- Touch e mouse support
@@ -773,7 +849,7 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     -- Lógica do toggle
     toggleButton.MouseButton1Click:Connect(function()
         isEnabled = not isEnabled
-        local newColor = isEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+        local newColor = isEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
         
         TweenService:Create(toggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
             BackgroundColor3 = newColor
@@ -790,24 +866,34 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
     return container
 end
 
--- Criar Toggle simples PERFEITAMENTE PROPORCIONADO
-local function createToggleOnly(parent, toggleText, toggleCallback)
+-- Criar Toggle simples TEMA SHARK
+local function createToggleOnly(parent, toggleText, toggleCallback, currentEnabled)
     local mobile = isMobile()
     
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, mobile and 26 or 60) -- PROPORÇÃO PERFEITA
-    container.BackgroundColor3 = Color3.fromRGB(20, 10, 25)
+    container.Size = UDim2.new(1, 0, 0, mobile and 26 or 60)
+    container.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
     container.BorderSizePixel = 0
     container.Parent = parent
 
     local containerCorner = Instance.new("UICorner")
-    containerCorner.CornerRadius = UDim.new(0, 4)
+    containerCorner.CornerRadius = UDim.new(0, 8)
     containerCorner.Parent = container
 
     local containerStroke = Instance.new("UIStroke")
-    containerStroke.Color = Color3.fromRGB(138, 43, 226)
+    containerStroke.Color = Color3.fromRGB(0, 162, 232)
     containerStroke.Thickness = 1
+    containerStroke.Transparency = 0.5
     containerStroke.Parent = container
+
+    -- Efeito gradient oceânico
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
+    }
+    gradient.Rotation = 90
+    gradient.Parent = container
 
     local toggle = Instance.new("Frame")
     toggle.Size = UDim2.new(1, -8, 0, mobile and 18 or 40)
@@ -816,10 +902,10 @@ local function createToggleOnly(parent, toggleText, toggleCallback)
     toggle.Parent = container
 
     local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(0.45, 0, 1, 0) -- MENOR PARA CABER 
+    toggleLabel.Size = UDim2.new(0.45, 0, 1, 0)
     toggleLabel.BackgroundTransparency = 1
     toggleLabel.Text = toggleText
-    toggleLabel.TextColor3 = Color3.fromRGB(200, 162, 255)
+    toggleLabel.TextColor3 = Color3.fromRGB(176, 224, 230)
     toggleLabel.TextSize = mobile and 8 or 18
     toggleLabel.Font = Enum.Font.GothamBold
     toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -830,8 +916,8 @@ local function createToggleOnly(parent, toggleText, toggleCallback)
     local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0, mobile and 35 or 70, 0, mobile and 18 or 35)
     toggleButton.Position = UDim2.new(1, mobile and -38 or -75, 0, mobile and 0 or 2.5)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-    toggleButton.Text = "OFF"
+    toggleButton.BackgroundColor3 = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
+    toggleButton.Text = currentEnabled and "ON" or "OFF"
     toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     toggleButton.TextSize = mobile and 7 or 14
     toggleButton.Font = Enum.Font.GothamBold
@@ -843,16 +929,16 @@ local function createToggleOnly(parent, toggleText, toggleCallback)
     toggleCorner.Parent = toggleButton
 
     local toggleGlow = Instance.new("UIStroke")
-    toggleGlow.Color = Color3.fromRGB(150, 0, 0)
-    toggleGlow.Thickness = 1
+    toggleGlow.Color = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
+    toggleGlow.Thickness = 2
     toggleGlow.Transparency = 0.5
     toggleGlow.Parent = toggleButton
 
-    local isEnabled = false
+    local isEnabled = currentEnabled or false
 
     toggleButton.MouseButton1Click:Connect(function()
         isEnabled = not isEnabled
-        local newColor = isEnabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+        local newColor = isEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
         
         TweenService:Create(toggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
             BackgroundColor3 = newColor
@@ -869,27 +955,29 @@ local function createToggleOnly(parent, toggleText, toggleCallback)
     return container
 end
 
--- Criar botão de cor PERFEITAMENTE PROPORCIONADO
+-- Criar botão de cor TEMA SHARK
 local function createColorButton(parent, colorData, callback)
     local mobile = isMobile()
     
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, mobile and 58 or 110, 0, mobile and 18 or 35) -- PROPORÇÃO PERFEITA
+    button.Size = UDim2.new(0, mobile and 58 or 110, 0, mobile and 18 or 35)
     button.BackgroundColor3 = colorData.color
     button.Text = colorData.name
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextSize = mobile and 5 or 12
     button.Font = Enum.Font.GothamBold
     button.BorderSizePixel = 0
+    button.TextStrokeTransparency = 0
+    button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     button.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 3)
+    corner.CornerRadius = UDim.new(0, 5)
     corner.Parent = button
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(200, 162, 255)
-    stroke.Thickness = 1
+    stroke.Color = Color3.fromRGB(0, 255, 255)
+    stroke.Thickness = 2
     stroke.Transparency = 1
     stroke.Parent = button
 
@@ -911,7 +999,7 @@ local function createColorButton(parent, colorData, callback)
     return button
 end
 
--- Sistema de Drag Universal (PC e Mobile)
+-- Sistema de Drag Universal
 local function setupUniversalDrag(frame, dragTarget)
     local dragging = false
     local dragStart = nil
@@ -972,7 +1060,7 @@ local function setupUniversalDrag(frame, dragTarget)
     end)
 end
 
--- SISTEMA DE SCROLL TOUCH NATIVO PARA MOBILE
+-- Sistema de Touch Scroll
 local function setupTouchScroll(scrollFrame)
     if not isMobile() then return end
     
@@ -1004,7 +1092,7 @@ local function setupTouchScroll(scrollFrame)
     end)
 end
 
--- Função principal para criar UI PERFEITAMENTE PROPORCIONADA
+-- Função principal para criar UI TEMA SHARK
 local function createUI()
     cleanupExistingGUI()
 
@@ -1012,77 +1100,90 @@ local function createUI()
     local mobile = isMobile()
     
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "BatHUBScriptGUI"
+    screenGui.Name = "SharkHUBScriptGUI"
     screenGui.ResetOnSpawn = false
     screenGui.Parent = PlayerGui
 
-    -- Frame principal PERFEITAMENTE PROPORCIONADO
+    -- Frame principal TEMA SHARK
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Size = UDim2.new(0, responsiveSize.width, 0, responsiveSize.height)
     mainFrame.Position = UDim2.new(0.5, -responsiveSize.width/2, 0.5, -responsiveSize.height/2)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(15, 5, 20)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(10, 20, 35)
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
     mainFrame.Parent = screenGui
 
-    -- Decorações do frame principal
+    -- Decorações oceânicas
     local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, mobile and 6 or 16)
+    mainCorner.CornerRadius = UDim.new(0, mobile and 8 or 20)
     mainCorner.Parent = mainFrame
 
     local mainStroke = Instance.new("UIStroke")
-    mainStroke.Color = Color3.fromRGB(138, 43, 226)
-    mainStroke.Thickness = mobile and 1 or 2
-    mainStroke.Transparency = 0.3
+    mainStroke.Color = Color3.fromRGB(0, 162, 232)
+    mainStroke.Thickness = mobile and 2 or 3
+    mainStroke.Transparency = 0.2
     mainStroke.Parent = mainFrame
 
+    -- Gradiente oceânico
     local mainGradient = Instance.new("UIGradient")
     mainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 10, 35)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 40, 70)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(10, 20, 35)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 10, 20))
     }
-    mainGradient.Rotation = 45
+    mainGradient.Rotation = 90
     mainGradient.Parent = mainFrame
 
-    -- Barra de título PERFEITAMENTE PROPORCIONADA
+    -- Barra de título TEMA SHARK
     local titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0, mobile and 22 or 60) -- PROPORÇÃO PERFEITA
-    titleBar.BackgroundColor3 = Color3.fromRGB(30, 0, 40)
+    titleBar.Size = UDim2.new(1, 0, 0, mobile and 22 or 60)
+    titleBar.BackgroundColor3 = Color3.fromRGB(0, 60, 100)
     titleBar.BorderSizePixel = 0
     titleBar.Active = true
     titleBar.Parent = mainFrame
 
     local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, mobile and 6 or 16)
+    titleCorner.CornerRadius = UDim.new(0, mobile and 8 or 20)
     titleCorner.Parent = titleBar
 
     local titleGradient = Instance.new("UIGradient")
     titleGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(138, 43, 226)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 20, 80))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 162, 232)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 100, 148)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 60, 100))
     }
     titleGradient.Rotation = 90
     titleGradient.Parent = titleBar
+
+    -- Efeito de onda animada
+    local waveEffect = Instance.new("Frame")
+    waveEffect.Size = UDim2.new(1, 0, 0, 2)
+    waveEffect.Position = UDim2.new(0, 0, 1, -2)
+    waveEffect.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+    waveEffect.BorderSizePixel = 0
+    waveEffect.Parent = titleBar
 
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, mobile and -25 or -70, 1, 0)
     titleLabel.Position = UDim2.new(0, mobile and 5 or 20, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "🦇 BatHUB 🦇"
-    titleLabel.TextColor3 = Color3.fromRGB(200, 162, 255)
+    titleLabel.Text = "🦈 SharkHUB 🦈"
+    titleLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
     titleLabel.TextSize = mobile and 9 or 24
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.TextScaled = mobile
+    titleLabel.TextStrokeTransparency = 0.5
+    titleLabel.TextStrokeColor3 = Color3.fromRGB(0, 40, 70)
     titleLabel.Parent = titleBar
 
-    -- Botão fechar PERFEITAMENTE PROPORCIONADO
+    -- Botão fechar
     local closeBtn = Instance.new("TextButton")
     closeBtn.Size = UDim2.new(0, mobile and 18 or 40, 0, mobile and 18 or 40)
     closeBtn.Position = UDim2.new(1, mobile and -20 or -50, 0, mobile and 2 or 10)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
     closeBtn.Text = "×"
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeBtn.TextSize = mobile and 10 or 24
@@ -1094,12 +1195,12 @@ local function createUI()
     closeCorner.CornerRadius = UDim.new(0, mobile and 9 or 20)
     closeCorner.Parent = closeBtn
 
-    -- UI minimizada MAIOR COMO SOLICITADO
+    -- UI minimizada SHARK
     local minimizedFrame = Instance.new("Frame")
     minimizedFrame.Name = "MinimizedFrame"  
-    minimizedFrame.Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 50 or 60) -- MAIOR
+    minimizedFrame.Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 50 or 60)
     minimizedFrame.Position = UDim2.new(0, 20, 0, 20)
-    minimizedFrame.BackgroundColor3 = Color3.fromRGB(30, 0, 40)
+    minimizedFrame.BackgroundColor3 = Color3.fromRGB(0, 60, 100)
     minimizedFrame.Visible = false
     minimizedFrame.Active = true
     minimizedFrame.Parent = screenGui
@@ -1109,23 +1210,31 @@ local function createUI()
     miniCorner.Parent = minimizedFrame
 
     local miniStroke = Instance.new("UIStroke")
-    miniStroke.Color = Color3.fromRGB(138, 43, 226)
-    miniStroke.Thickness = 2
+    miniStroke.Color = Color3.fromRGB(0, 162, 232)
+    miniStroke.Thickness = 3
     miniStroke.Parent = minimizedFrame
+
+    local miniGradient = Instance.new("UIGradient")
+    miniGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 162, 232)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 60, 100))
+    }
+    miniGradient.Rotation = 135
+    miniGradient.Parent = minimizedFrame
 
     local miniLabel = Instance.new("TextLabel")
     miniLabel.Size = UDim2.new(1, 0, 1, 0)
     miniLabel.BackgroundTransparency = 1
-    miniLabel.Text = "🌙"
-    miniLabel.TextColor3 = Color3.fromRGB(200, 162, 255)
-    miniLabel.TextSize = mobile and 24 or 28 -- MAIOR
+    miniLabel.Text = "🦈"
+    miniLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+    miniLabel.TextSize = mobile and 24 or 28
     miniLabel.Font = Enum.Font.GothamBold
     miniLabel.Parent = minimizedFrame
 
-    -- Setup drag universal
+    -- Setup drag
     setupUniversalDrag(mainFrame, titleBar)
     
-    -- Drag para UI minimizada com sistema de clique/drag aprimorado
+    -- Drag para UI minimizada
     local miniDragging = false
     local miniClickStart = 0
     local miniClickThreshold = 0.3
@@ -1143,11 +1252,9 @@ local function createUI()
                 local clickDuration = tick() - miniClickStart
                 
                 if clickDuration < miniClickThreshold and not miniDragging then
-                    -- Clique rápido = expandir UI
                     minimizedFrame.Visible = false
                     mainFrame.Visible = true
                     
-                    -- Animação suave de expansão
                     mainFrame.Size = UDim2.new(0, 0, 0, 0)
                     mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
                     
@@ -1164,15 +1271,15 @@ local function createUI()
     setupMinimizedInteraction()
     setupUniversalDrag(minimizedFrame, minimizedFrame)
 
-    -- Container principal PERFEITAMENTE PROPORCIONADO PARA SCROLL
+    -- Container principal com margem para scroll
     local containerTop = mobile and 40 or 130
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -10, 1, containerTop + 12) -- PROPORÇÃO PERFEITA
+    container.Size = UDim2.new(1, -10, 1, -containerTop - 10)
     container.Position = UDim2.new(0, 5, 0, containerTop)
     container.BackgroundTransparency = 1
     container.Parent = mainFrame
 
-    -- Sistema de abas PERFEITAMENTE PROPORCIONADO
+    -- Sistema de abas SHARK
     local tabButtons = Instance.new("Frame")
     tabButtons.Size = UDim2.new(1, -10, 0, mobile and 18 or 45)
     tabButtons.Position = UDim2.new(0, 5, 0, mobile and 25 or 75)
@@ -1186,11 +1293,11 @@ local function createUI()
 
     local function createTab(name, text)
         local tabBtn = Instance.new("TextButton")
-        tabBtn.Size = UDim2.new(0, mobile and 70 or 120, 1, 0) -- PROPORÇÃO PERFEITA
-        tabBtn.BackgroundColor3 = Color3.fromRGB(40, 10, 50)
+        tabBtn.Size = UDim2.new(0, mobile and 70 or 120, 1, 0)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
         tabBtn.BorderSizePixel = 0
         tabBtn.Text = text
-        tabBtn.TextColor3 = Color3.fromRGB(180, 140, 230)
+        tabBtn.TextColor3 = Color3.fromRGB(176, 224, 230)
         tabBtn.Font = Enum.Font.GothamBold
         tabBtn.TextSize = mobile and 6 or 16
         tabBtn.TextScaled = mobile
@@ -1201,18 +1308,19 @@ local function createUI()
         corner.Parent = tabBtn
 
         local stroke = Instance.new("UIStroke")
-        stroke.Color = Color3.fromRGB(100, 40, 130)
+        stroke.Color = Color3.fromRGB(0, 100, 148)
         stroke.Thickness = 1
+        stroke.Transparency = 0.5
         stroke.Parent = tabBtn
 
         return tabBtn
     end
 
-    local playerTab = createTab("Player", "👤 Player")
-    local helperTab = createTab("Helper", "📍 Helper")  
+    local playerTab = createTab("Player", "⚡ Player")
+    local helperTab = createTab("Helper", "🎯 Helper")  
     local configTab = createTab("Config", "⚙️ Config")
 
-    -- FUNÇÃO PARA CRIAR SEÇÃO COM SCROLL FUNCIONAL E TOUCH
+    -- Criar seções com scroll funcional
     local function createSection(name)
         local section = Instance.new("ScrollingFrame")
         section.Name = name .. "Section"
@@ -1221,18 +1329,14 @@ local function createUI()
         section.BackgroundTransparency = 1
         section.BorderSizePixel = 0
         section.Visible = false
-        -- CONFIGURAÇÕES CRÍTICAS PARA SCROLL APARECER E FUNCIONAR
-        section.ScrollBarThickness = mobile and 12 or 6
-        section.ScrollBarImageColor3 = Color3.fromRGB(138, 43, 226)
-        section.ScrollBarImageTransparency = 0 -- CRUCIAL: 0 PARA APARECER
+        section.ScrollBarThickness = mobile and 8 or 6
+        section.ScrollBarImageColor3 = Color3.fromRGB(0, 162, 232)
+        section.ScrollBarImageTransparency = 0.3
         section.ScrollingDirection = Enum.ScrollingDirection.Y
         section.ScrollingEnabled = true
-        section.CanvasSize = UDim2.new(0, 0, 0, 0) -- ZERADO - IMPORTANTE
-        section.AutomaticCanvasSize = Enum.AutomaticSize.Y -- AUTOMÁTICO - CRUCIAL
-        -- IMAGENS DA SCROLLBAR PARA GARANTIR VISIBILIDADE
-        section.TopImage = "rbxasset://textures/ui/Scroll/scroll-top.png"
-        section.MidImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-        section.BottomImage = "rbxasset://textures/ui/Scroll/scroll-bottom.png"
+        section.CanvasSize = UDim2.new(0, 0, 0, 0)
+        section.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        section.ElasticBehavior = Enum.ElasticBehavior.Always
         section.Parent = container
 
         local layout = Instance.new("UIListLayout")
@@ -1240,15 +1344,13 @@ local function createUI()
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout.Parent = section
 
-        -- PADDING INTERNO PARA SCROLL FUNCIONAR
         local padding = Instance.new("UIPadding")
         padding.PaddingTop = UDim.new(0, mobile and 4 or 10)
         padding.PaddingBottom = UDim.new(0, mobile and 8 or 10)
         padding.PaddingLeft = UDim.new(0, 0)
-        padding.PaddingRight = UDim.new(0, mobile and 12 or 0) -- ESPAÇO PARA SCROLLBAR
+        padding.PaddingRight = UDim.new(0, mobile and 8 or 5)
         padding.Parent = section
 
-        -- SETUP TOUCH SCROLL NATIVO
         setupTouchScroll(section)
 
         return section
@@ -1260,7 +1362,7 @@ local function createUI()
 
     -- Mostrar primeira aba
     playerSection.Visible = true
-    playerTab.BackgroundColor3 = Color3.fromRGB(100, 40, 130)
+    playerTab.BackgroundColor3 = Color3.fromRGB(0, 100, 148)
 
     -- Sistema de troca de abas
     local function switchTab(targetSection, targetBtn)
@@ -1268,12 +1370,12 @@ local function createUI()
         helperSection.Visible = false
         configSection.Visible = false
         
-        playerTab.BackgroundColor3 = Color3.fromRGB(40, 10, 50)
-        helperTab.BackgroundColor3 = Color3.fromRGB(40, 10, 50)
-        configTab.BackgroundColor3 = Color3.fromRGB(40, 10, 50)
+        playerTab.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
+        helperTab.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
+        configTab.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
         
         targetSection.Visible = true
-        targetBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 130)
+        targetBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 148)
         
         -- Reset scroll para o topo
         targetSection.CanvasPosition = Vector2.new(0, 0)
@@ -1283,8 +1385,8 @@ local function createUI()
     helperTab.MouseButton1Click:Connect(function() switchTab(helperSection, helperTab) end)
     configTab.MouseButton1Click:Connect(function() switchTab(configSection, configTab) end)
 
-    -- Controles da seção Player PERFEITAMENTE PROPORCIONADOS
-    createToggleAndSlider(playerSection, "🚀 Speed Hack", "Speed", 16, 100, 50,
+    -- Controles da seção Player
+    createToggleAndSlider(playerSection, "⚡ Speed Hack", "Speed", 16, 100, Settings.Speed.value,
         function(enabled)
             Settings.Speed.enabled = enabled
             ConnectionManager:remove("Speed")
@@ -1301,11 +1403,13 @@ local function createUI()
                 end))
             end
         end,
-        function(value) Settings.Speed.value = value end
+        function(value) Settings.Speed.value = value end,
+        Settings.Speed.enabled,
+        Settings.Speed.value
     )
 
     local canJump = true
-    createToggleAndSlider(playerSection, "🦘 Jump Hack", "Jump Power", 50, 150, 90,
+    createToggleAndSlider(playerSection, "🚀 Jump Hack", "Jump Power", 50, 150, Settings.Jump.value,
         function(enabled)
             Settings.Jump.enabled = enabled
             ConnectionManager:remove("Jump")
@@ -1326,67 +1430,83 @@ local function createUI()
                 end))
             end
         end,
-        function(value) Settings.Jump.value = value end
+        function(value) Settings.Jump.value = value end,
+        Settings.Jump.enabled,
+        Settings.Jump.value
     )
 
-    createToggleOnly(playerSection, "🚁 Float V1 (Camera Direction)",
+    createToggleOnly(playerSection, "🌊 Float V1 (Wave Mode)",
         function(enabled)
             Settings.FloatV1.enabled = enabled
             setupFloatV1()
-        end
+        end,
+        Settings.FloatV1.enabled
     )
 
-    createToggleOnly(playerSection, "🎈 Float V2 (Enhanced)",
+    createToggleOnly(playerSection, "💨 Float V2 (Current Mode)",
         function(enabled)
             Settings.FloatV2.enabled = enabled
             setupFloatV2()
-        end
+        end,
+        Settings.FloatV2.enabled
     )
 
-    createToggleOnly(playerSection, "🛡️ Anti-Hit (Desync)",
+    createToggleOnly(playerSection, "🛡️ Anti-Hit (Shark Shield)",
         function(enabled)
             Settings.AntiHit.enabled = enabled
             setupAntiHit()
-        end
+        end,
+        Settings.AntiHit.enabled
     )
 
-    -- Controles da seção Helper PERFEITAMENTE PROPORCIONADOS
-    createToggleOnly(helperSection, "🧠 ESP Best Brainrot",
+    -- Controles da seção Helper
+    createToggleOnly(helperSection, "🎯 ESP Best Target",
         function(enabled)
             Settings.ESPBetter.enabled = enabled
             setupESPBetter()
-        end
+        end,
+        Settings.ESPBetter.enabled
     )
 
     createToggleOnly(helperSection, "👁️ ESP Players",
         function(enabled)
             Settings.ESP.enabled = enabled
             setupESPPlayers()
-        end
+        end,
+        Settings.ESP.enabled
     )
 
-    -- Seção de cores ESP PERFEITAMENTE PROPORCIONADA
+    -- Seção de cores ESP
     local colorFrame = Instance.new("Frame")
-    colorFrame.Size = UDim2.new(1, -4, 0, mobile and 78 or 200) -- PROPORÇÃO PERFEITA
-    colorFrame.BackgroundColor3 = Color3.fromRGB(20, 10, 25)
+    colorFrame.Size = UDim2.new(1, -4, 0, mobile and 78 or 200)
+    colorFrame.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
     colorFrame.BorderSizePixel = 0
     colorFrame.Parent = helperSection
 
     local colorFrameCorner = Instance.new("UICorner")
-    colorFrameCorner.CornerRadius = UDim.new(0, 4)
+    colorFrameCorner.CornerRadius = UDim.new(0, 8)
     colorFrameCorner.Parent = colorFrame
 
     local colorStroke = Instance.new("UIStroke")
-    colorStroke.Color = Color3.fromRGB(138, 43, 226)
+    colorStroke.Color = Color3.fromRGB(0, 162, 232)
     colorStroke.Thickness = 1
+    colorStroke.Transparency = 0.5
     colorStroke.Parent = colorFrame
+
+    local colorGradient = Instance.new("UIGradient")
+    colorGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
+    }
+    colorGradient.Rotation = 90
+    colorGradient.Parent = colorFrame
 
     local colorTitle = Instance.new("TextLabel")
     colorTitle.Size = UDim2.new(1, -6, 0, mobile and 12 or 30)
     colorTitle.Position = UDim2.new(0, 3, 0, 3)
     colorTitle.BackgroundTransparency = 1
-    colorTitle.Text = "🎨 ESP Colors"
-    colorTitle.TextColor3 = Color3.fromRGB(200, 162, 255)
+    colorTitle.Text = "🎨 ESP Ocean Colors"
+    colorTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
     colorTitle.TextSize = mobile and 8 or 18
     colorTitle.Font = Enum.Font.GothamBold
     colorTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1400,7 +1520,7 @@ local function createUI()
     colorGrid.Parent = colorFrame
 
     local gridLayout = Instance.new("UIGridLayout")
-    gridLayout.CellSize = UDim2.new(0, mobile and 58 or 110, 0, mobile and 18 or 35) -- PROPORÇÃO PERFEITA
+    gridLayout.CellSize = UDim2.new(0, mobile and 58 or 110, 0, mobile and 18 or 35)
     gridLayout.CellPadding = UDim2.new(0, mobile and 1 or 5, 0, mobile and 1 or 5)
     gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     gridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
@@ -1428,7 +1548,43 @@ local function createUI()
         end)
     end
 
-    -- Controles da seção Config PERFEITAMENTE PROPORCIONADOS
+    -- Controles da seção Config CORRIGIDOS
+    local configInfo = Instance.new("Frame")
+    configInfo.Size = UDim2.new(1, 0, 0, mobile and 60 or 80)
+    configInfo.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
+    configInfo.BorderSizePixel = 0
+    configInfo.Parent = configSection
+
+    local infoCorner = Instance.new("UICorner")
+    infoCorner.CornerRadius = UDim.new(0, 8)
+    infoCorner.Parent = configInfo
+
+    local infoStroke = Instance.new("UIStroke")
+    infoStroke.Color = Color3.fromRGB(0, 162, 232)
+    infoStroke.Thickness = 1
+    infoStroke.Transparency = 0.5
+    infoStroke.Parent = configInfo
+
+    local infoGradient = Instance.new("UIGradient")
+    infoGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
+    }
+    infoGradient.Rotation = 90
+    infoGradient.Parent = configInfo
+
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Size = UDim2.new(1, -10, 1, -10)
+    infoLabel.Position = UDim2.new(0, 5, 0, 5)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.Text = "💾 Save your settings\n📂 Load previous settings\n🔄 Reset to default"
+    infoLabel.TextColor3 = Color3.fromRGB(176, 224, 230)
+    infoLabel.TextSize = mobile and 8 or 14
+    infoLabel.Font = Enum.Font.Gotham
+    infoLabel.TextWrapped = true
+    infoLabel.TextScaled = mobile
+    infoLabel.Parent = configInfo
+
     local configButtonsFrame = Instance.new("Frame")
     configButtonsFrame.Size = UDim2.new(1, 0, 0, mobile and 85 or 50)
     configButtonsFrame.BackgroundTransparency = 1
@@ -1437,11 +1593,12 @@ local function createUI()
     local configLayout = Instance.new("UIListLayout")
     configLayout.FillDirection = mobile and Enum.FillDirection.Vertical or Enum.FillDirection.Horizontal
     configLayout.Padding = UDim.new(0, mobile and 4 or 20)
+    configLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     configLayout.Parent = configButtonsFrame
 
     local function createConfigButton(text, color, callback)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, mobile and 210 or 120, 0, mobile and 22 or 40) -- PROPORÇÃO PERFEITA
+        btn.Size = UDim2.new(0, mobile and 210 or 120, 0, mobile and 22 or 40)
         btn.BackgroundColor3 = color
         btn.Text = text
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1451,69 +1608,78 @@ local function createUI()
         btn.Parent = configButtonsFrame
 
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 4)
+        corner.CornerRadius = UDim.new(0, 6)
         corner.Parent = btn
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = color:Lerp(Color3.new(1, 1, 1), 0.3)
+        stroke.Thickness = 2
+        stroke.Transparency = 0.7
+        stroke.Parent = btn
+
+        -- Efeito hover/press
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.2)
+            }):Play()
+        end)
+
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.2), {
+                BackgroundColor3 = color
+            }):Play()
+        end)
 
         btn.MouseButton1Click:Connect(callback)
         return btn
     end
 
-    -- BOTÕES COM CORES CORRETAS E TAMANHOS PERFEITOS
-    local saveBtn = createConfigButton("💾 Salvar", Color3.fromRGB(0, 150, 0), function()
+    local saveBtn = createConfigButton("💾 Save", Color3.fromRGB(34, 139, 34), function()
         task.spawn(function()
             local originalText = saveBtn.Text
-            saveBtn.Text = saveConfig() and "✅ Salvo!" or "❌ Erro!"
+            local success = saveConfig()
+            saveBtn.Text = success and "✅ Saved!" or "❌ Error!"
             task.wait(2)
             saveBtn.Text = originalText
         end)
     end)
 
-    local loadBtn = createConfigButton("📂 Carregar", Color3.fromRGB(0, 100, 200), function()
+    local loadBtn = createConfigButton("📂 Load", Color3.fromRGB(0, 100, 148), function()
         task.spawn(function()
             local originalText = loadBtn.Text
-            local config = loadConfig()
-            if config then
-                for key, value in pairs(config) do
-                    if Settings[key] then
-                        for subKey, subValue in pairs(value) do
-                            if subKey == "color" and type(subValue) == "table" then
-                                Settings[key][subKey] = Color3.fromRGB(subValue[1], subValue[2], subValue[3])
-                            else
-                                Settings[key][subKey] = subValue
-                            end
-                        end
-                    end
-                end
-                loadBtn.Text = "✅ Carregado!"
-            else
-                loadBtn.Text = "❌ Erro!"
-            end
+            local success = loadConfig()
+            loadBtn.Text = success and "✅ Loaded!" or "❌ No Config!"
             task.wait(2)
             loadBtn.Text = originalText
         end)
     end)
 
-    local resetBtn = createConfigButton("🔄 Resetar", Color3.fromRGB(200, 0, 0), function()
+    local resetBtn = createConfigButton("🔄 Reset", Color3.fromRGB(220, 20, 60), function()
         task.spawn(function()
             local originalText = resetBtn.Text
-            resetBtn.Text = resetConfig() and "✅ Resetado!" or "❌ Erro!"
+            local success = resetConfig()
+            resetBtn.Text = success and "✅ Reset!" or "❌ Error!"
             task.wait(2)
             resetBtn.Text = originalText
         end)
     end)
 
-    -- Botão fechar com animação aprimorada
+    -- Botão fechar com animação
     closeBtn.MouseButton1Click:Connect(function()
         local closeTween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
             Position = UDim2.new(0.5, 0, 0.5, 0)
-        })
-        closeTween:Play()
+        }):Play()
         
-        closeTween.Completed:Connect(function()
-            mainFrame.Visible = false
-            minimizedFrame.Visible = true
-        end)
+        task.wait(0.3)
+        mainFrame.Visible = false
+        minimizedFrame.Visible = true
+        
+        -- Animação da UI minimizada
+        minimizedFrame.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 50 or 60)
+        }):Play()
     end)
 end
 
@@ -1537,7 +1703,6 @@ local function cleanup()
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
     
-    -- Resetar Anti-Hit
     pcall(function()
         if setfflag then
             setfflag("WorldStepMax", "-1")
@@ -1552,7 +1717,6 @@ Players.PlayerRemoving:Connect(function(player)
     if player == LocalPlayer then cleanup() end
 end)
 
--- Cleanup quando personagem morre (para resetar Anti-Hit)
 LocalPlayer.CharacterAdded:Connect(function()
     if Settings.AntiHit.enabled then
         Settings.AntiHit.enabled = false
@@ -1568,5 +1732,5 @@ end)
 
 -- Inicializar
 createUI()
-print("✅ BatHUB Script carregado com sucesso!")
-print("🦇 Versão Mobile Otimizada com Anti-Hit funcional")
+print("🦈 SharkHUB Script carregado com sucesso!")
+print("🌊 Versão Premium com tema oceânico e configurações funcionais")
