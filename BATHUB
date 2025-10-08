@@ -1,4 +1,4 @@
--- SharkHUB Premium V2 - Interface Ultra Moderna
+-- SharkHUB Premium V2 - Interface Ultra Moderna (Otimizado)
 -- Serviços principais
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -43,7 +43,6 @@ local ConnectionManager = {
 -- Gerenciador de Estado
 local StateManager = {
     floatV1 = false,
-    floatV2 = false,
     bestESP = false,
     antiHit = false,
     set = function(self, key, value)
@@ -70,7 +69,7 @@ local Cache = {
     end
 }
 
--- Sistema de Notificações
+-- Sistema de Notificações (AJUSTADO PARA MOBILE)
 local NotificationSystem = {
     queue = {},
     showing = false,
@@ -90,10 +89,11 @@ local NotificationSystem = {
         
         self.showing = true
         local data = table.remove(self.queue, 1)
+        local mobile = isMobile()
         
-        -- Criar notificação
+        -- Criar notificação (TAMANHO REDUZIDO)
         local notif = Instance.new("Frame")
-        notif.Size = UDim2.new(0, 300, 0, 60)
+        notif.Size = UDim2.new(0, mobile and 200 or 300, 0, mobile and 40 or 60)
         notif.Position = UDim2.new(1, 20, 0, 100)
         notif.BackgroundColor3 = data.type == "success" and Color3.fromRGB(34, 139, 34) 
             or data.type == "error" and Color3.fromRGB(220, 20, 60) 
@@ -102,32 +102,34 @@ local NotificationSystem = {
         notif.Parent = PlayerGui:FindFirstChild("SharkHUBScriptGUI")
         
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 12)
+        corner.CornerRadius = UDim.new(0, mobile and 8 or 12)
         corner.Parent = notif
         
         local shadow = Instance.new("UIStroke")
         shadow.Color = Color3.fromRGB(0, 0, 0)
-        shadow.Thickness = 4
+        shadow.Thickness = mobile and 2 or 4
         shadow.Transparency = 0.8
         shadow.Parent = notif
         
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, -20, 1, 0)
-        label.Position = UDim2.new(0, 10, 0, 0)
+        label.Size = UDim2.new(1, -10, 1, 0)
+        label.Position = UDim2.new(0, 5, 0, 0)
         label.BackgroundTransparency = 1
         label.Text = data.text
         label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextSize = 16
+        label.TextSize = mobile and 11 or 16
         label.Font = Enum.Font.GothamBold
         label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextWrapped = true
         label.Parent = notif
         
         -- Animação
+        local targetPos = mobile and -210 or -320
         TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-            Position = UDim2.new(1, -320, 0, 100)
+            Position = UDim2.new(1, targetPos, 0, 100)
         }):Play()
         
-        task.wait(3)
+        task.wait(2.5)
         
         TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Position = UDim2.new(1, 20, 0, 100)
@@ -145,11 +147,10 @@ local Settings = {
     Speed = {enabled = false, value = 50},
     Jump = {enabled = false, value = 90},
     FloatV1 = {enabled = false}, 
-    FloatV2 = {enabled = false}, 
     ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
     ESPBetter = {enabled = false},
     AntiHit = {enabled = false},
-    Theme = "Ocean" -- Novo sistema de temas
+    Theme = "Ocean"
 }
 
 -- Temas disponíveis
@@ -217,13 +218,13 @@ local function parseValue(text)
     return multipliers[suffix] and number * multipliers[suffix] or number
 end
 
--- ESP Better
+-- ESP Better (CORRIGIDO)
 local function setupESPBetter()
     ConnectionManager:remove("ESPBetter")
     StateManager:set("bestESP", Settings.ESPBetter.enabled)
     
     if Settings.ESPBetter.enabled then
-        local lastUpdate, UPDATE_INTERVAL = 0, 0.1
+        local lastUpdate, UPDATE_INTERVAL = 0, 0.2
         
         ConnectionManager:add("ESPBetter", RunService.Heartbeat:Connect(function()
             local currentTime = tick()
@@ -234,29 +235,43 @@ local function setupESPBetter()
 
             local bestAnimal, bestValue, bestBase = nil, -math.huge, nil
 
-            for _, plot in ipairs(Workspace.Plots:GetChildren()) do
-                local plotSign = Cache:get(plot, "PlotSign")
+            -- Limpar ESP anterior
+            if currentESP then 
+                pcall(function() currentESP:Destroy() end)
+                currentESP = nil 
+            end
+            for _, hl in pairs(highlights) do 
+                pcall(function() if hl and hl.Parent then hl:Destroy() end end)
+            end
+            highlights = {}
+
+            -- Buscar melhor animal
+            local plots = Workspace:FindFirstChild("Plots")
+            if not plots then return end
+
+            for _, plot in ipairs(plots:GetChildren()) do
+                local plotSign = plot:FindFirstChild("PlotSign")
                 if plotSign then
-                    local surfaceGui = Cache:get(plotSign, "SurfaceGui")
-                    local frame = surfaceGui and Cache:get(surfaceGui, "Frame")
-                    local textLabel = frame and Cache:get(frame, "TextLabel")
+                    local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+                    local frame = surfaceGui and surfaceGui:FindFirstChild("Frame")
+                    local textLabel = frame and frame:FindFirstChild("TextLabel")
                     
                     if textLabel and textLabel.Text ~= "Empty Base" and not textLabel.Text:find(LocalPlayer.DisplayName) then
-                        local animalPodiums = Cache:get(plot, "AnimalPodiums")
+                        local animalPodiums = plot:FindFirstChild("AnimalPodiums")
                         if animalPodiums then
                             for _, podium in ipairs(animalPodiums:GetChildren()) do
-                                local base = Cache:get(podium, "Base")
-                                local spawn = base and Cache:get(base, "Spawn")
-                                local attach = spawn and Cache:get(spawn, "Attachment")
+                                local base = podium:FindFirstChild("Base")
+                                local spawn = base and base:FindFirstChild("Spawn")
+                                local attach = spawn and spawn:FindFirstChild("Attachment")
                                 
                                 if attach then
-                                    local overhead = Cache:get(attach, "AnimalOverhead")
+                                    local overhead = attach:FindFirstChild("AnimalOverhead")
                                     if overhead then
-                                        local stolen = Cache:get(overhead, "Stolen")
+                                        local stolen = overhead:FindFirstChild("Stolen")
                                         if not (stolen and (stolen.Text == "FUSING" or stolen.Text == "IN MACHINE" or stolen.Text == "CRAFTING")) then
-                                            local gen = Cache:get(overhead, "Generation")
-                                            local rarity = Cache:get(overhead, "Rarity")
-                                            local name = Cache:get(overhead, "DisplayName")
+                                            local gen = overhead:FindFirstChild("Generation")
+                                            local rarity = overhead:FindFirstChild("Rarity")
+                                            local name = overhead:FindFirstChild("DisplayName")
                                             
                                             if gen and rarity and name then
                                                 local value = parseValue(gen.Text)
@@ -280,71 +295,81 @@ local function setupESPBetter()
                 end
             end
 
-            if currentESP then 
-                currentESP:Destroy() 
-                currentESP = nil 
-            end
-            for _, hl in pairs(highlights) do 
-                if hl and hl.Parent then hl:Destroy() end
-            end
-            highlights = {}
-
+            -- Criar ESP para o melhor animal
             if bestAnimal then
-                local billboard = Instance.new("BillboardGui")
-                billboard.Name = "BestAnimalESP"
-                billboard.AlwaysOnTop = true
-                billboard.Size = UDim2.new(0.35, 0, 0.65, 0)
-                billboard.StudsOffset = Vector3.new(0, 3.2, 0)
-                billboard.Parent = bestAnimal.attachment
-                
-                local back = Instance.new("Frame")
-                back.BackgroundTransparency = 0.18
-                back.BackgroundColor3 = CurrentTheme.surface
-                back.Size = UDim2.new(1, 0, 1, 0)
-                back.Position = UDim2.new(0.5, 0, 0.5, 0)
-                back.AnchorPoint = Vector2.new(0.5, 0.5)
-                back.Parent = billboard
-                
-                local uicorner = Instance.new("UICorner")
-                uicorner.CornerRadius = UDim.new(0, 10)
-                uicorner.Parent = back
-                
-                local textLabel = Instance.new("TextLabel")
-                textLabel.Size = UDim2.new(0.9, 0, 0.9, 0)
-                textLabel.Position = UDim2.new(0.05, 0, 0.05, 0)
-                textLabel.BackgroundTransparency = 1
-                textLabel.TextColor3 = CurrentTheme.accent
-                textLabel.TextScaled = true
-                textLabel.Font = Enum.Font.GothamBold
-                textLabel.Text = string.format("%s | %s | %s", bestAnimal.nome, bestAnimal.raridade, bestAnimal.porSegundo)
-                textLabel.TextWrapped = true
-                textLabel.Parent = back
-                
-                currentESP = billboard
+                pcall(function()
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Name = "BestAnimalESP"
+                    billboard.AlwaysOnTop = true
+                    billboard.Size = UDim2.new(0.4, 0, 0.7, 0)
+                    billboard.StudsOffset = Vector3.new(0, 3.5, 0)
+                    billboard.Parent = bestAnimal.attachment
+                    
+                    local back = Instance.new("Frame")
+                    back.BackgroundTransparency = 0.15
+                    back.BackgroundColor3 = CurrentTheme.surface
+                    back.Size = UDim2.new(1, 0, 1, 0)
+                    back.Position = UDim2.new(0.5, 0, 0.5, 0)
+                    back.AnchorPoint = Vector2.new(0.5, 0.5)
+                    back.Parent = billboard
+                    
+                    local uicorner = Instance.new("UICorner")
+                    uicorner.CornerRadius = UDim.new(0, 10)
+                    uicorner.Parent = back
+                    
+                    local uistroke = Instance.new("UIStroke")
+                    uistroke.Color = CurrentTheme.primary
+                    uistroke.Thickness = 2
+                    uistroke.Parent = back
+                    
+                    local textLabel = Instance.new("TextLabel")
+                    textLabel.Size = UDim2.new(0.9, 0, 0.9, 0)
+                    textLabel.Position = UDim2.new(0.05, 0, 0.05, 0)
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.TextColor3 = CurrentTheme.accent
+                    textLabel.TextScaled = true
+                    textLabel.Font = Enum.Font.GothamBold
+                    textLabel.Text = string.format("🎯 %s\n%s | %s", bestAnimal.nome, bestAnimal.raridade, bestAnimal.porSegundo)
+                    textLabel.TextWrapped = true
+                    textLabel.Parent = back
+                    
+                    currentESP = billboard
 
-                local decorations = bestBase and Cache:get(bestBase, "Decorations")
-                if decorations then
-                    for _, d in ipairs(decorations:GetDescendants()) do
-                        local hl = Instance.new("Highlight")
-                        hl.Name = "ESP_Deco"
-                        hl.FillColor = CurrentTheme.primary
-                        hl.OutlineColor = CurrentTheme.secondary
-                        hl.FillTransparency = 0
-                        hl.Parent = d
-                        highlights[d] = hl
+                    -- Highlight nas decorações
+                    if bestBase then
+                        local decorations = bestBase:FindFirstChild("Decorations")
+                        if decorations then
+                            for _, d in ipairs(decorations:GetDescendants()) do
+                                if d:IsA("BasePart") then
+                                    pcall(function()
+                                        local hl = Instance.new("Highlight")
+                                        hl.Name = "ESP_Deco"
+                                        hl.FillColor = CurrentTheme.primary
+                                        hl.OutlineColor = CurrentTheme.secondary
+                                        hl.FillTransparency = 0.5
+                                        hl.OutlineTransparency = 0
+                                        hl.Parent = d
+                                        highlights[d] = hl
+                                    end)
+                                end
+                            end
+                        end
                     end
-                end
+                end)
             end
         end))
+        
+        NotificationSystem:show("ESP Target ativado!", "success")
     else
         if currentESP then
-            currentESP:Destroy()
+            pcall(function() currentESP:Destroy() end)
             currentESP = nil
         end
         for _, hl in pairs(highlights) do 
-            if hl and hl.Parent then hl:Destroy() end
+            pcall(function() if hl and hl.Parent then hl:Destroy() end end)
         end
         highlights = {}
+        NotificationSystem:show("ESP Target desativado", "info")
     end
 end
 
@@ -522,7 +547,6 @@ local function saveConfig()
         Speed = {enabled = Settings.Speed.enabled, value = Settings.Speed.value},
         Jump = {enabled = Settings.Jump.enabled, value = Settings.Jump.value},
         FloatV1 = {enabled = Settings.FloatV1.enabled},
-        FloatV2 = {enabled = Settings.FloatV2.enabled},
         ESP = {
             enabled = Settings.ESP.enabled, 
             color = {Settings.ESP.color.R * 255, Settings.ESP.color.G * 255, Settings.ESP.color.B * 255}
@@ -593,7 +617,6 @@ local function resetConfig()
         Speed = {enabled = false, value = 50},
         Jump = {enabled = false, value = 90},
         FloatV1 = {enabled = false}, 
-        FloatV2 = {enabled = false}, 
         ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
         ESPBetter = {enabled = false},
         AntiHit = {enabled = false},
@@ -601,7 +624,6 @@ local function resetConfig()
     }
     
     StateManager:set("floatV1", false)
-    StateManager:set("floatV2", false)
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
     
@@ -620,7 +642,7 @@ local function resetConfig()
     return true
 end
 
--- Funções Float
+-- Função Float V1
 local function setupFloatV1()
     ConnectionManager:remove("FloatV1")
     StateManager:set("floatV1", Settings.FloatV1.enabled)
@@ -634,30 +656,6 @@ local function setupFloatV1()
             local cam = Workspace.CurrentCamera
             if hrp and cam then
                 hrp.Velocity = cam.CFrame.LookVector * 25
-            end
-        end))
-    end
-end
-
-local function setupFloatV2()
-    ConnectionManager:remove("FloatV2")
-    StateManager:set("floatV2", Settings.FloatV2.enabled)
-    
-    if Settings.FloatV2.enabled then
-        ConnectionManager:add("FloatV2", RunService.Heartbeat:Connect(function()
-            if not StateManager:get("floatV2") then return end
-            local char = LocalPlayer.Character
-            if not char then return end
-            local hrp = Cache:get(char, "HumanoidRootPart")
-            local humanoid = Cache:get(char, "Humanoid")
-            local cam = Workspace.CurrentCamera
-            if hrp and cam and humanoid then
-                local moveVector = humanoid.MoveDirection
-                if moveVector.Magnitude > 0 then
-                    hrp.Velocity = (cam.CFrame.LookVector * moveVector.Z + cam.CFrame.RightVector * moveVector.X) * 30
-                else
-                    hrp.Velocity = Vector3.new(0, 0, 0)
-                end
             end
         end))
     end
@@ -1244,9 +1242,9 @@ local function createUI()
                     rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
                 end
             end))
-            NotificationSystem:show("Speed Hack ativado!", "success")
+            NotificationSystem:show("Speed ativado!", "success")
         else
-            NotificationSystem:show("Speed Hack desativado", "info")
+            NotificationSystem:show("Speed desativado", "info")
         end
     end, Settings.Speed.enabled)
 
@@ -1274,23 +1272,17 @@ local function createUI()
                     end)
                 end
             end))
-            NotificationSystem:show("Jump Hack ativado!", "success")
+            NotificationSystem:show("Jump ativado!", "success")
         else
-            NotificationSystem:show("Jump Hack desativado", "info")
+            NotificationSystem:show("Jump desativado", "info")
         end
     end, Settings.Jump.enabled)
 
-    createModernToggle(playerSection, "🌊", "Float Mode V1", function(enabled)
+    createModernToggle(playerSection, "🌊", "Float Mode", function(enabled)
         Settings.FloatV1.enabled = enabled
         setupFloatV1()
-        NotificationSystem:show(enabled and "Float V1 ativado!" or "Float V1 desativado", enabled and "success" or "info")
+        NotificationSystem:show(enabled and "Float ativado!" or "Float desativado", enabled and "success" or "info")
     end, Settings.FloatV1.enabled)
-
-    createModernToggle(playerSection, "💨", "Float Mode V2", function(enabled)
-        Settings.FloatV2.enabled = enabled
-        setupFloatV2()
-        NotificationSystem:show(enabled and "Float V2 ativado!" or "Float V2 desativado", enabled and "success" or "info")
-    end, Settings.FloatV2.enabled)
 
     createModernToggle(playerSection, "🛡", "Anti-Hit Shield", function(enabled)
         Settings.AntiHit.enabled = enabled
@@ -1301,7 +1293,6 @@ local function createUI()
     createModernToggle(visualSection, "🎯", "ESP Best Target", function(enabled)
         Settings.ESPBetter.enabled = enabled
         setupESPBetter()
-        NotificationSystem:show(enabled and "ESP Target ativado!" or "ESP Target desativado", enabled and "success" or "info")
     end, Settings.ESPBetter.enabled)
 
     createModernToggle(visualSection, "👥", "ESP Players", function(enabled)
@@ -1377,7 +1368,7 @@ local function createUI()
                     end
                 end
             end
-            NotificationSystem:show("Cor alterada para " .. colorData.name, "info")
+            NotificationSystem:show("Cor: " .. colorData.name, "info")
         end)
     end
 
@@ -1440,7 +1431,7 @@ local function createUI()
         themeBtn.MouseButton1Click:Connect(function()
             Settings.Theme = themeName
             CurrentTheme = Themes[themeName]
-            NotificationSystem:show("Tema alterado para " .. themeName, "success")
+            NotificationSystem:show("Tema: " .. themeName, "success")
             
             -- Atualizar cores da UI
             header.BackgroundColor3 = CurrentTheme.primary
@@ -1524,23 +1515,22 @@ local function createUI()
         return btn
     end
 
-    createConfigButton("Save Configuration", "💾", Color3.fromRGB(34, 139, 34), function()
+    createConfigButton("Save Config", "💾", Color3.fromRGB(34, 139, 34), function()
         local success = saveConfig()
-        NotificationSystem:show(success and "Configuração salva!" or "Erro ao salvar", success and "success" or "error")
+        NotificationSystem:show(success and "Config salva!" or "Erro ao salvar", success and "success" or "error")
     end)
 
-    createConfigButton("Load Configuration", "📂", Color3.fromRGB(30, 144, 255), function()
+    createConfigButton("Load Config", "📂", Color3.fromRGB(30, 144, 255), function()
         local success = loadConfig()
-        NotificationSystem:show(success and "Configuração carregada!" or "Nenhuma configuração encontrada", success and "success" or "error")
+        NotificationSystem:show(success and "Config carregada!" or "Sem config", success and "success" or "error")
         if success then
-            -- Atualizar UI com valores carregados
-            switchTab(currentTab) -- Refresh current tab
+            switchTab(currentTab)
         end
     end)
 
-    createConfigButton("Reset to Default", "🔄", Color3.fromRGB(220, 20, 60), function()
+    createConfigButton("Reset Config", "🔄", Color3.fromRGB(220, 20, 60), function()
         local success = resetConfig()
-        NotificationSystem:show(success and "Configuração resetada!" or "Erro ao resetar", success and "success" or "error")
+        NotificationSystem:show(success and "Config resetada!" or "Erro", success and "success" or "error")
         if success then
             cleanupExistingGUI()
             createUI()
@@ -1699,7 +1689,6 @@ local function cleanup()
     
     Cache:clear()
     StateManager:set("floatV1", false)
-    StateManager:set("floatV2", false)
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
     
@@ -1732,6 +1721,7 @@ end)
 
 -- Inicializar
 createUI()
-NotificationSystem:show("SharkHUB Premium carregado!", "success")
+NotificationSystem:show("SharkHUB carregado!", "success")
 print("🦈 SharkHUB Premium v2.0 - Interface Ultra Moderna")
 print("💎 Desenvolvido com animações fluidas e design responsivo")
+    themeTitle
