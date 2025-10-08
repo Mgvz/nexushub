@@ -1,5 +1,9 @@
--- SharkHUB Premium V2 - Interface Ultra Moderna (Otimizado)
--- Serviços principais
+-- SharkHUB Premium V2 - Interface Ultra Moderna
+-- COPIE ESTE CÓDIGO COMPLETO E EXECUTE NO SEU EXECUTOR
+
+if not game:IsLoaded() then game.Loaded:Wait() end
+task.wait(1)
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -8,52 +12,45 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 local Workspace = workspace
-
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Detectar dispositivo
+print("🦈 SharkHUB: Iniciando...")
+
 local function isMobile()
     return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 end
 
--- Gerenciador de Conexões
 local ConnectionManager = {
     connections = {},
     add = function(self, name, connection)
         if self.connections[name] then
-            self.connections[name]:Disconnect()
+            pcall(function() self.connections[name]:Disconnect() end)
         end
         self.connections[name] = connection
     end,
     remove = function(self, name)
         if self.connections[name] then
-            self.connections[name]:Disconnect()
+            pcall(function() self.connections[name]:Disconnect() end)
             self.connections[name] = nil
         end
     end,
     cleanup = function(self)
         for _, connection in pairs(self.connections) do
-            connection:Disconnect()
+            pcall(function() connection:Disconnect() end)
         end
         self.connections = {}
     end
 }
 
--- Gerenciador de Estado
 local StateManager = {
     floatV1 = false,
     bestESP = false,
     antiHit = false,
-    set = function(self, key, value)
-        self[key] = value
-    end,
-    get = function(self, key)
-        return self[key]
-    end
+    set = function(self, key, value) self[key] = value end,
+    get = function(self, key) return self[key] end
 }
 
--- Sistema de Cache
 local Cache = {
     instances = {},
     get = function(self, parent, name)
@@ -64,34 +61,27 @@ local Cache = {
         end
         return self.instances[key]
     end,
-    clear = function(self)
-        self.instances = {}
-    end
+    clear = function(self) self.instances = {} end
 }
 
--- Sistema de Notificações (AJUSTADO PARA MOBILE)
 local NotificationSystem = {
     queue = {},
     showing = false,
-    
     show = function(self, text, type)
         table.insert(self.queue, {text = text, type = type or "info"})
-        if not self.showing then
-            self:processQueue()
-        end
+        if not self.showing then self:processQueue() end
     end,
-    
     processQueue = function(self)
         if #self.queue == 0 then
             self.showing = false
             return
         end
-        
         self.showing = true
         local data = table.remove(self.queue, 1)
         local mobile = isMobile()
+        local gui = PlayerGui:FindFirstChild("SharkHUBScriptGUI")
+        if not gui then self.showing = false return end
         
-        -- Criar notificação (TAMANHO REDUZIDO)
         local notif = Instance.new("Frame")
         notif.Size = UDim2.new(0, mobile and 200 or 300, 0, mobile and 40 or 60)
         notif.Position = UDim2.new(1, 20, 0, 100)
@@ -99,7 +89,7 @@ local NotificationSystem = {
             or data.type == "error" and Color3.fromRGB(220, 20, 60) 
             or Color3.fromRGB(0, 162, 232)
         notif.BorderSizePixel = 0
-        notif.Parent = PlayerGui:FindFirstChild("SharkHUBScriptGUI")
+        notif.Parent = gui
         
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, mobile and 8 or 12)
@@ -123,26 +113,21 @@ local NotificationSystem = {
         label.TextWrapped = true
         label.Parent = notif
         
-        -- Animação
         local targetPos = mobile and -210 or -320
         TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
             Position = UDim2.new(1, targetPos, 0, 100)
         }):Play()
         
         task.wait(2.5)
-        
         TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Position = UDim2.new(1, 20, 0, 100)
         }):Play()
-        
         task.wait(0.5)
-        notif:Destroy()
-        
+        pcall(function() notif:Destroy() end)
         self:processQueue()
     end
 }
 
--- Configurações principais
 local Settings = {
     Speed = {enabled = false, value = 50},
     Jump = {enabled = false, value = 90},
@@ -153,7 +138,6 @@ local Settings = {
     Theme = "Ocean"
 }
 
--- Temas disponíveis
 local Themes = {
     Ocean = {
         primary = Color3.fromRGB(0, 162, 232),
@@ -187,7 +171,6 @@ local Themes = {
 
 local CurrentTheme = Themes[Settings.Theme]
 
--- Paleta de cores ESP
 local ColorPalette = {
     {name = "Ocean", color = Color3.fromRGB(0, 162, 232)},
     {name = "Deep", color = Color3.fromRGB(0, 100, 148)},
@@ -204,12 +187,9 @@ local ColorPalette = {
 }
 
 local CONFIG_FILE_NAME = "SharkHUB_Config.json"
-
--- Variáveis do ESP
 local currentESP = nil
 local highlights = {}
 
--- Função para parsear valores
 local function parseValue(text)
     if not text or text == "" then return 0 end
     local multipliers = {Q = 1e15, T = 1e12, B = 1e9, M = 1e6, K = 1e3}
@@ -218,72 +198,61 @@ local function parseValue(text)
     return multipliers[suffix] and number * multipliers[suffix] or number
 end
 
--- ESP Better (CORRIGIDO)
 local function setupESPBetter()
     ConnectionManager:remove("ESPBetter")
     StateManager:set("bestESP", Settings.ESPBetter.enabled)
     
+    if currentESP then pcall(function() currentESP:Destroy() end) currentESP = nil end
+    for _, hl in pairs(highlights) do pcall(function() if hl and hl.Parent then hl:Destroy() end end) end
+    highlights = {}
+    
     if Settings.ESPBetter.enabled then
         local lastUpdate, UPDATE_INTERVAL = 0, 0.2
-        
         ConnectionManager:add("ESPBetter", RunService.Heartbeat:Connect(function()
             local currentTime = tick()
-            if currentTime - lastUpdate < UPDATE_INTERVAL or not StateManager:get("bestESP") then 
-                return 
-            end
+            if currentTime - lastUpdate < UPDATE_INTERVAL or not StateManager:get("bestESP") then return end
             lastUpdate = currentTime
 
             local bestAnimal, bestValue, bestBase = nil, -math.huge, nil
-
-            -- Limpar ESP anterior
-            if currentESP then 
-                pcall(function() currentESP:Destroy() end)
-                currentESP = nil 
-            end
-            for _, hl in pairs(highlights) do 
-                pcall(function() if hl and hl.Parent then hl:Destroy() end end)
-            end
+            if currentESP then pcall(function() currentESP:Destroy() end) currentESP = nil end
+            for _, hl in pairs(highlights) do pcall(function() if hl and hl.Parent then hl:Destroy() end end) end
             highlights = {}
 
-            -- Buscar melhor animal
             local plots = Workspace:FindFirstChild("Plots")
             if not plots then return end
 
             for _, plot in ipairs(plots:GetChildren()) do
-                local plotSign = plot:FindFirstChild("PlotSign")
-                if plotSign then
-                    local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
-                    local frame = surfaceGui and surfaceGui:FindFirstChild("Frame")
-                    local textLabel = frame and frame:FindFirstChild("TextLabel")
-                    
-                    if textLabel and textLabel.Text ~= "Empty Base" and not textLabel.Text:find(LocalPlayer.DisplayName) then
-                        local animalPodiums = plot:FindFirstChild("AnimalPodiums")
-                        if animalPodiums then
-                            for _, podium in ipairs(animalPodiums:GetChildren()) do
-                                local base = podium:FindFirstChild("Base")
-                                local spawn = base and base:FindFirstChild("Spawn")
-                                local attach = spawn and spawn:FindFirstChild("Attachment")
-                                
-                                if attach then
-                                    local overhead = attach:FindFirstChild("AnimalOverhead")
-                                    if overhead then
-                                        local stolen = overhead:FindFirstChild("Stolen")
-                                        if not (stolen and (stolen.Text == "FUSING" or stolen.Text == "IN MACHINE" or stolen.Text == "CRAFTING")) then
-                                            local gen = overhead:FindFirstChild("Generation")
-                                            local rarity = overhead:FindFirstChild("Rarity")
-                                            local name = overhead:FindFirstChild("DisplayName")
-                                            
-                                            if gen and rarity and name then
-                                                local value = parseValue(gen.Text)
-                                                if value > bestValue then
-                                                    bestValue = value
-                                                    bestAnimal = {
-                                                        attachment = attach, 
-                                                        nome = name.Text, 
-                                                        raridade = rarity.Text, 
-                                                        porSegundo = gen.Text
-                                                    }
-                                                    bestBase = base
+                pcall(function()
+                    local plotSign = plot:FindFirstChild("PlotSign")
+                    if plotSign then
+                        local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+                        local frame = surfaceGui and surfaceGui:FindFirstChild("Frame")
+                        local textLabel = frame and frame:FindFirstChild("TextLabel")
+                        
+                        if textLabel and textLabel.Text ~= "Empty Base" and not textLabel.Text:find(LocalPlayer.DisplayName) then
+                            local animalPodiums = plot:FindFirstChild("AnimalPodiums")
+                            if animalPodiums then
+                                for _, podium in ipairs(animalPodiums:GetChildren()) do
+                                    local base = podium:FindFirstChild("Base")
+                                    local spawn = base and base:FindFirstChild("Spawn")
+                                    local attach = spawn and spawn:FindFirstChild("Attachment")
+                                    
+                                    if attach then
+                                        local overhead = attach:FindFirstChild("AnimalOverhead")
+                                        if overhead then
+                                            local stolen = overhead:FindFirstChild("Stolen")
+                                            if not (stolen and (stolen.Text == "FUSING" or stolen.Text == "IN MACHINE" or stolen.Text == "CRAFTING")) then
+                                                local gen = overhead:FindFirstChild("Generation")
+                                                local rarity = overhead:FindFirstChild("Rarity")
+                                                local name = overhead:FindFirstChild("DisplayName")
+                                                
+                                                if gen and rarity and name then
+                                                    local value = parseValue(gen.Text)
+                                                    if value > bestValue then
+                                                        bestValue = value
+                                                        bestAnimal = {attachment = attach, nome = name.Text, raridade = rarity.Text, porSegundo = gen.Text}
+                                                        bestBase = base
+                                                    end
                                                 end
                                             end
                                         end
@@ -292,11 +261,10 @@ local function setupESPBetter()
                             end
                         end
                     end
-                end
+                end)
             end
 
-            -- Criar ESP para o melhor animal
-            if bestAnimal then
+            if bestAnimal and bestAnimal.attachment then
                 pcall(function()
                     local billboard = Instance.new("BillboardGui")
                     billboard.Name = "BestAnimalESP"
@@ -332,10 +300,8 @@ local function setupESPBetter()
                     textLabel.Text = string.format("🎯 %s\n%s | %s", bestAnimal.nome, bestAnimal.raridade, bestAnimal.porSegundo)
                     textLabel.TextWrapped = true
                     textLabel.Parent = back
-                    
                     currentESP = billboard
 
-                    -- Highlight nas decorações
                     if bestBase then
                         local decorations = bestBase:FindFirstChild("Decorations")
                         if decorations then
@@ -358,58 +324,41 @@ local function setupESPBetter()
                 end)
             end
         end))
-        
         NotificationSystem:show("ESP Target ativado!", "success")
     else
-        if currentESP then
-            pcall(function() currentESP:Destroy() end)
-            currentESP = nil
-        end
-        for _, hl in pairs(highlights) do 
-            pcall(function() if hl and hl.Parent then hl:Destroy() end end)
-        end
-        highlights = {}
         NotificationSystem:show("ESP Target desativado", "info")
     end
 end
 
--- Anti-Hit
 local function setupAntiHit()
     ConnectionManager:remove("AntiHit")
     StateManager:set("antiHit", Settings.AntiHit.enabled)
     
     if Settings.AntiHit.enabled then
         task.spawn(function()
-            local success, errorMsg = pcall(function()
-                local backpack = LocalPlayer:WaitForChild("Backpack")
+            local success = pcall(function()
+                local backpack = LocalPlayer:WaitForChild("Backpack", 5)
+                if not backpack then NotificationSystem:show("Backpack não encontrado", "error") return end
+                
                 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-                local humanoid = character:WaitForChild("Humanoid")
+                local humanoid = character:WaitForChild("Humanoid", 5)
+                if not humanoid then NotificationSystem:show("Humanoid não encontrado", "error") return end
                 
                 NotificationSystem:show("Iniciando Anti-Hit...", "info")
                 
                 local packages = ReplicatedStorage:WaitForChild("Packages", 5)
-                if not packages then 
-                    NotificationSystem:show("Packages não encontrado", "error")
-                    return false
-                end
+                if not packages then NotificationSystem:show("Packages não encontrado", "error") return end
                 
                 local netFolder = packages:WaitForChild("Net", 5)
-                if not netFolder then 
-                    NotificationSystem:show("Net folder não encontrado", "error")
-                    return false
-                end
+                if not netFolder then NotificationSystem:show("Net folder não encontrado", "error") return end
                 
                 local useItemRemote = netFolder:WaitForChild("RE/UseItem", 5)
                 local teleportRemote = netFolder:WaitForChild("RE/QuantumCloner/OnTeleport", 5)
                 
-                if not useItemRemote or not teleportRemote then
-                    NotificationSystem:show("Remotos não encontrados", "error")
-                    return false
-                end
+                if not useItemRemote or not teleportRemote then NotificationSystem:show("Remotos não encontrados", "error") return end
 
                 local toolNames = {"Quantum Cloner", "Brainrot", "brainrot"}
                 local tool = nil
-                
                 for _, toolName in ipairs(toolNames) do
                     tool = backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
                     if tool then break end
@@ -417,10 +366,7 @@ local function setupAntiHit()
                 
                 if not tool then
                     for _, item in ipairs(backpack:GetChildren()) do
-                        if item:IsA("Tool") then
-                            tool = item
-                            break
-                        end
+                        if item:IsA("Tool") then tool = item break end
                     end
                 end
                 
@@ -429,22 +375,14 @@ local function setupAntiHit()
                     task.wait(0.5)
                 end
 
-                if setfflag then
-                    setfflag("WorldStepMax", "-9999999999")
-                end
-                
+                if setfflag then setfflag("WorldStepMax", "-9999999999") end
                 task.wait(0.2)
                 useItemRemote:FireServer()
                 task.wait(1)
                 teleportRemote:FireServer()
                 task.wait(2)
-                
-                if setfflag then
-                    setfflag("WorldStepMax", "-1")
-                end
-                
+                if setfflag then setfflag("WorldStepMax", "-1") end
                 NotificationSystem:show("Anti-Hit ativado!", "success")
-                return true
             end)
             
             if not success then
@@ -454,24 +392,20 @@ local function setupAntiHit()
             end
         end)
     else
-        pcall(function()
-            if setfflag then
-                setfflag("WorldStepMax", "-1")
-            end
-        end)
+        pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
         NotificationSystem:show("Anti-Hit desativado", "info")
     end
 end
 
--- ESP Players
 local function setupESPPlayers()
     ConnectionManager:remove("ESPPlayers")
+    ConnectionManager:remove("ESPPlayersRemoving")
     
     for _, highlight in pairs(Settings.ESP.highlights) do
-        if highlight and highlight.Parent then highlight:Destroy() end
+        pcall(function() if highlight and highlight.Parent then highlight:Destroy() end end)
     end
     for _, nametag in pairs(Settings.ESP.nametags) do
-        if nametag and nametag.Parent then nametag:Destroy() end
+        pcall(function() if nametag and nametag.Parent then nametag:Destroy() end end)
     end
     Settings.ESP.highlights = {}
     Settings.ESP.nametags = {}
@@ -479,100 +413,85 @@ local function setupESPPlayers()
     if Settings.ESP.enabled then
         local function createPlayerESP(player)
             if player == LocalPlayer then return end
-            
             local function addESP()
-                local character = player.Character
-                if not character then return end
-                
-                local humanoidRootPart = Cache:get(character, "HumanoidRootPart")
-                local humanoid = Cache:get(character, "Humanoid")
-                if not (humanoidRootPart and humanoid) then return end
-                
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "PlayerESP"
-                highlight.FillColor = Settings.ESP.color
-                highlight.OutlineColor = Settings.ESP.color
-                highlight.FillTransparency = 0.5
-                highlight.OutlineTransparency = 0
-                highlight.Parent = character
-                Settings.ESP.highlights[player] = highlight
-                
-                local billboard = Instance.new("BillboardGui")
-                billboard.Name = "PlayerNameTag"
-                billboard.AlwaysOnTop = true
-                billboard.Size = UDim2.new(0, 200, 0, 50)
-                billboard.StudsOffset = Vector3.new(0, 3, 0)
-                billboard.Parent = humanoidRootPart
-                
-                local nameLabel = Instance.new("TextLabel")
-                nameLabel.Size = UDim2.new(1, 0, 1, 0)
-                nameLabel.BackgroundTransparency = 1
-                nameLabel.Text = player.DisplayName
-                nameLabel.TextColor3 = Settings.ESP.color
-                nameLabel.TextSize = 18
-                nameLabel.Font = Enum.Font.GothamBold
-                nameLabel.TextStrokeTransparency = 0
-                nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-                nameLabel.Parent = billboard
-                
-                Settings.ESP.nametags[player] = billboard
+                pcall(function()
+                    local character = player.Character
+                    if not character then return end
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    if not (humanoidRootPart and humanoid) then return end
+                    
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "PlayerESP"
+                    highlight.FillColor = Settings.ESP.color
+                    highlight.OutlineColor = Settings.ESP.color
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0
+                    highlight.Parent = character
+                    Settings.ESP.highlights[player] = highlight
+                    
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Name = "PlayerNameTag"
+                    billboard.AlwaysOnTop = true
+                    billboard.Size = UDim2.new(0, 200, 0, 50)
+                    billboard.StudsOffset = Vector3.new(0, 3, 0)
+                    billboard.Parent = humanoidRootPart
+                    
+                    local nameLabel = Instance.new("TextLabel")
+                    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+                    nameLabel.BackgroundTransparency = 1
+                    nameLabel.Text = player.DisplayName
+                    nameLabel.TextColor3 = Settings.ESP.color
+                    nameLabel.TextSize = 18
+                    nameLabel.Font = Enum.Font.GothamBold
+                    nameLabel.TextStrokeTransparency = 0
+                    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                    nameLabel.Parent = billboard
+                    Settings.ESP.nametags[player] = billboard
+                end)
             end
-            
             if player.Character then addESP() end
             player.CharacterAdded:Connect(addESP)
         end
         
-        for _, player in ipairs(Players:GetPlayers()) do
-            createPlayerESP(player)
-        end
-        
+        for _, player in ipairs(Players:GetPlayers()) do createPlayerESP(player) end
         ConnectionManager:add("ESPPlayers", Players.PlayerAdded:Connect(createPlayerESP))
-        
         ConnectionManager:add("ESPPlayersRemoving", Players.PlayerRemoving:Connect(function(player)
             if Settings.ESP.highlights[player] then
-                Settings.ESP.highlights[player]:Destroy()
+                pcall(function() Settings.ESP.highlights[player]:Destroy() end)
                 Settings.ESP.highlights[player] = nil
             end
             if Settings.ESP.nametags[player] then
-                Settings.ESP.nametags[player]:Destroy()
+                pcall(function() Settings.ESP.nametags[player]:Destroy() end)
                 Settings.ESP.nametags[player] = nil
             end
         end))
+        NotificationSystem:show("ESP Players ativado!", "success")
+    else
+        NotificationSystem:show("ESP Players desativado", "info")
     end
 end
 
--- Sistema de configuração
 local function saveConfig()
+    if not writefile then NotificationSystem:show("Executor não suporta salvar", "error") return false end
     local configToSave = {
         Speed = {enabled = Settings.Speed.enabled, value = Settings.Speed.value},
         Jump = {enabled = Settings.Jump.enabled, value = Settings.Jump.value},
         FloatV1 = {enabled = Settings.FloatV1.enabled},
-        ESP = {
-            enabled = Settings.ESP.enabled, 
-            color = {Settings.ESP.color.R * 255, Settings.ESP.color.G * 255, Settings.ESP.color.B * 255}
-        },
+        ESP = {enabled = Settings.ESP.enabled, color = {Settings.ESP.color.R * 255, Settings.ESP.color.G * 255, Settings.ESP.color.B * 255}},
         ESPBetter = {enabled = Settings.ESPBetter.enabled},
         AntiHit = {enabled = Settings.AntiHit.enabled},
         Theme = Settings.Theme
     }
-    
-    local success, encoded = pcall(function()
-        return HttpService:JSONEncode(configToSave)
-    end)
-    
-    if success then
-        writefile(CONFIG_FILE_NAME, encoded)
-        return true
-    end
+    local success, encoded = pcall(function() return HttpService:JSONEncode(configToSave) end)
+    if success then writefile(CONFIG_FILE_NAME, encoded) return true end
     return false
 end
 
 local function loadConfig()
+    if not isfile or not readfile then return false end
     if isfile(CONFIG_FILE_NAME) then
-        local success, decoded = pcall(function()
-            return HttpService:JSONDecode(readfile(CONFIG_FILE_NAME))
-        end)
-        
+        local success, decoded = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE_NAME)) end)
         if success and decoded then
             for key, value in pairs(decoded) do
                 if Settings[key] and type(value) == "table" then
@@ -596,21 +515,10 @@ end
 
 local function resetConfig()
     ConnectionManager:cleanup()
-    
-    for _, highlight in pairs(Settings.ESP.highlights) do
-        if highlight and highlight.Parent then highlight:Destroy() end
-    end
-    for _, nametag in pairs(Settings.ESP.nametags) do
-        if nametag and nametag.Parent then nametag:Destroy() end
-    end
-    
-    if currentESP then
-        currentESP:Destroy()
-        currentESP = nil
-    end
-    for _, hl in pairs(highlights) do 
-        if hl and hl.Parent then hl:Destroy() end
-    end
+    for _, highlight in pairs(Settings.ESP.highlights) do pcall(function() if highlight and highlight.Parent then highlight:Destroy() end end) end
+    for _, nametag in pairs(Settings.ESP.nametags) do pcall(function() if nametag and nametag.Parent then nametag:Destroy() end end) end
+    if currentESP then pcall(function() currentESP:Destroy() end) currentESP = nil end
+    for _, hl in pairs(highlights) do pcall(function() if hl and hl.Parent then hl:Destroy() end end) end
     highlights = {}
     
     Settings = {
@@ -626,54 +534,39 @@ local function resetConfig()
     StateManager:set("floatV1", false)
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
-    
-    pcall(function()
-        if setfflag then
-            setfflag("WorldStepMax", "-1")
-        end
-    end)
-    
+    pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
     Cache:clear()
-    
-    if isfile(CONFIG_FILE_NAME) then
-        delfile(CONFIG_FILE_NAME)
-    end
-    
+    if isfile and delfile and isfile(CONFIG_FILE_NAME) then delfile(CONFIG_FILE_NAME) end
     return true
 end
 
--- Função Float V1
 local function setupFloatV1()
     ConnectionManager:remove("FloatV1")
     StateManager:set("floatV1", Settings.FloatV1.enabled)
-    
     if Settings.FloatV1.enabled then
         ConnectionManager:add("FloatV1", RunService.Heartbeat:Connect(function()
             if not StateManager:get("floatV1") then return end
-            local char = LocalPlayer.Character
-            if not char then return end
-            local hrp = Cache:get(char, "HumanoidRootPart")
-            local cam = Workspace.CurrentCamera
-            if hrp and cam then
-                hrp.Velocity = cam.CFrame.LookVector * 25
-            end
+            pcall(function()
+                local char = LocalPlayer.Character
+                if not char then return end
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local cam = Workspace.CurrentCamera
+                if hrp and cam then hrp.Velocity = cam.CFrame.LookVector * 25 end
+            end)
         end))
+        NotificationSystem:show("Float ativado!", "success")
+    else
+        NotificationSystem:show("Float desativado", "info")
     end
 end
 
--- Limpar GUI existente
 local function cleanupExistingGUI()
     local existingGUI = PlayerGui:FindFirstChild("SharkHUBScriptGUI")
-    if existingGUI then
-        existingGUI:Destroy()
-        task.wait(0.1)
-    end
+    if existingGUI then existingGUI:Destroy() task.wait(0.1) end
 end
 
--- Criar Toggle Moderno com Animações
 local function createModernToggle(parent, icon, text, callback, currentState)
     local mobile = isMobile()
-    
     local container = Instance.new("Frame")
     container.Size = UDim2.new(1, -10, 0, mobile and 50 or 70)
     container.BackgroundColor3 = CurrentTheme.surface
@@ -685,14 +578,10 @@ local function createModernToggle(parent, icon, text, callback, currentState)
     corner.Parent = container
 
     local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, CurrentTheme.surface),
-        ColorSequenceKeypoint.new(1, CurrentTheme.background)
-    }
+    gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.surface), ColorSequenceKeypoint.new(1, CurrentTheme.background)}
     gradient.Rotation = 90
     gradient.Parent = container
 
-    -- Ícone
     local iconLabel = Instance.new("TextLabel")
     iconLabel.Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)
     iconLabel.Position = UDim2.new(0, 10, 0.5, 0)
@@ -708,7 +597,6 @@ local function createModernToggle(parent, icon, text, callback, currentState)
     iconCorner.CornerRadius = UDim.new(0, 8)
     iconCorner.Parent = iconLabel
 
-    -- Texto
     local textLabel = Instance.new("TextLabel")
     textLabel.Size = UDim2.new(0.5, 0, 1, 0)
     textLabel.Position = UDim2.new(0, mobile and 50 or 65, 0, 0)
@@ -720,7 +608,6 @@ local function createModernToggle(parent, icon, text, callback, currentState)
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
     textLabel.Parent = container
 
-    -- Switch animado
     local switchFrame = Instance.new("Frame")
     switchFrame.Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 25 or 30)
     switchFrame.Position = UDim2.new(1, mobile and -60 or -70, 0.5, 0)
@@ -759,53 +646,20 @@ local function createModernToggle(parent, icon, text, callback, currentState)
 
     local isEnabled = currentState or false
 
-    -- Animação ao clicar
     switchButton.MouseButton1Click:Connect(function()
         isEnabled = not isEnabled
-        
-        -- Animação do switch
-        TweenService:Create(switchFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            BackgroundColor3 = isEnabled and CurrentTheme.primary or Color3.fromRGB(60, 60, 60)
-        }):Play()
-        
-        TweenService:Create(switchBall, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            Position = isEnabled and UDim2.new(1, mobile and -23 or -28, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
-        }):Play()
-        
-        -- Efeito de pulse no ícone
-        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, mobile and 35 or 45, 0, mobile and 35 or 45)
-        }):Play()
-        
+        TweenService:Create(switchFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {BackgroundColor3 = isEnabled and CurrentTheme.primary or Color3.fromRGB(60, 60, 60)}):Play()
+        TweenService:Create(switchBall, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = isEnabled and UDim2.new(1, mobile and -23 or -28, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
+        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 35 or 45, 0, mobile and 35 or 45)}):Play()
         task.wait(0.2)
-        
-        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)
-        }):Play()
-        
+        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)}):Play()
         if callback then callback(isEnabled) end
     end)
-
-    -- Efeito hover
-    container.MouseEnter:Connect(function()
-        TweenService:Create(container, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0.1
-        }):Play()
-    end)
-
-    container.MouseLeave:Connect(function()
-        TweenService:Create(container, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0
-        }):Play()
-    end)
-
     return container
 end
 
--- Criar Slider Moderno
 local function createModernSlider(parent, icon, text, min, max, default, callback, current)
     local mobile = isMobile()
-    
     local container = Instance.new("Frame")
     container.Size = UDim2.new(1, -10, 0, mobile and 80 or 100)
     container.BackgroundColor3 = CurrentTheme.surface
@@ -817,14 +671,10 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     corner.Parent = container
 
     local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, CurrentTheme.surface),
-        ColorSequenceKeypoint.new(1, CurrentTheme.background)
-    }
+    gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.surface), ColorSequenceKeypoint.new(1, CurrentTheme.background)}
     gradient.Rotation = 90
     gradient.Parent = container
 
-    -- Header
     local header = Instance.new("Frame")
     header.Size = UDim2.new(1, 0, 0, mobile and 40 or 50)
     header.BackgroundTransparency = 1
@@ -857,7 +707,6 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     textLabel.Parent = header
 
     local currentValue = current or default
-    
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Size = UDim2.new(0, 60, 1, 0)
     valueLabel.Position = UDim2.new(1, -70, 0, 0)
@@ -869,7 +718,6 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     valueLabel.TextXAlignment = Enum.TextXAlignment.Right
     valueLabel.Parent = header
 
-    -- Slider
     local sliderFrame = Instance.new("Frame")
     sliderFrame.Size = UDim2.new(1, -20, 0, mobile and 8 or 10)
     sliderFrame.Position = UDim2.new(0, 10, 1, mobile and -20 or -25)
@@ -892,10 +740,7 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     fillCorner.Parent = sliderFill
 
     local fillGradient = Instance.new("UIGradient")
-    fillGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, CurrentTheme.primary),
-        ColorSequenceKeypoint.new(1, CurrentTheme.accent)
-    }
+    fillGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.accent)}
     fillGradient.Parent = sliderFill
 
     local sliderThumb = Instance.new("Frame")
@@ -923,7 +768,6 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     sliderButton.Parent = sliderFrame
 
     local dragging = false
-
     local function updateSlider(position)
         local relativeX = math.clamp((position.X - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X, 0, 1)
         currentValue = math.floor(min + (max - min) * relativeX)
@@ -937,18 +781,14 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             updateSlider(input.Position)
-            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {
-                Size = UDim2.new(0, mobile and 20 or 24, 0, mobile and 20 or 24)
-            }):Play()
+            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {Size = UDim2.new(0, mobile and 20 or 24, 0, mobile and 20 or 24)}):Play()
         end
     end)
     
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
-            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {
-                Size = UDim2.new(0, mobile and 16 or 20, 0, mobile and 16 or 20)
-            }):Play()
+            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {Size = UDim2.new(0, mobile and 16 or 20, 0, mobile and 16 or 20)}):Play()
         end
     end)
 
@@ -957,14 +797,11 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
             updateSlider(input.Position)
         end
     end)
-
     return container
 end
 
--- Sistema de Drag melhorado
 local function setupDrag(frame, handle)
     local dragging, dragStart, startPos = false, nil, nil
-    
     handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
@@ -972,19 +809,12 @@ local function setupDrag(frame, handle)
             startPos = frame.Position
         end
     end)
-    
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
-            frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
-    
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
@@ -992,23 +822,21 @@ local function setupDrag(frame, handle)
     end)
 end
 
--- UI Principal
 local function createUI()
+    print("🦈 SharkHUB: Criando UI...")
     cleanupExistingGUI()
-    
     local mobile = isMobile()
     
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "SharkHUBScriptGUI"
     screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = PlayerGui
 
-    -- Blur de fundo
     local blur = Instance.new("BlurEffect")
     blur.Size = 0
     blur.Parent = Lighting
 
-    -- Frame principal
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)
@@ -1028,14 +856,10 @@ local function createUI()
     mainShadow.Transparency = 0.7
     mainShadow.Parent = mainFrame
 
-    -- Animação de entrada
     mainFrame.Size = UDim2.new(0, 0, 0, 0)
     TweenService:Create(blur, TweenInfo.new(0.5), {Size = 10}):Play()
-    TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-        Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)
-    }):Play()
+    TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)}):Play()
 
-    -- Header
     local header = Instance.new("Frame")
     header.Size = UDim2.new(1, 0, 0, mobile and 60 or 80)
     header.BackgroundColor3 = CurrentTheme.primary
@@ -1054,10 +878,7 @@ local function createUI()
     headerFix.Parent = header
 
     local headerGradient = Instance.new("UIGradient")
-    headerGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, CurrentTheme.primary),
-        ColorSequenceKeypoint.new(1, CurrentTheme.secondary)
-    }
+    headerGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.secondary)}
     headerGradient.Rotation = 90
     headerGradient.Parent = header
 
@@ -1083,7 +904,6 @@ local function createUI()
     subtitle.TextXAlignment = Enum.TextXAlignment.Left
     subtitle.Parent = header
 
-    -- Botão minimizar
     local minimizeBtn = Instance.new("TextButton")
     minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
     minimizeBtn.Position = UDim2.new(1, -70, 0.5, 0)
@@ -1100,7 +920,6 @@ local function createUI()
     minCorner.CornerRadius = UDim.new(0, 8)
     minCorner.Parent = minimizeBtn
 
-    -- Botão fechar
     local closeBtn = Instance.new("TextButton")
     closeBtn.Size = UDim2.new(0, 30, 0, 30)
     closeBtn.Position = UDim2.new(1, -35, 0.5, 0)
@@ -1117,7 +936,6 @@ local function createUI()
     closeCorner.CornerRadius = UDim.new(0, 8)
     closeCorner.Parent = closeBtn
 
-    -- Tabs
     local tabContainer = Instance.new("Frame")
     tabContainer.Size = UDim2.new(1, -20, 0, mobile and 35 or 45)
     tabContainer.Position = UDim2.new(0, 10, 0, mobile and 70 or 90)
@@ -1161,14 +979,12 @@ local function createUI()
     local visualTab = createTab("Visual", "👁")
     local configTab = createTab("Config", "⚙")
 
-    -- Content
     local content = Instance.new("Frame")
     content.Size = UDim2.new(1, -20, 1, mobile and -120 or -150)
     content.Position = UDim2.new(0, 10, 0, mobile and 110 or 140)
     content.BackgroundTransparency = 1
     content.Parent = mainFrame
 
-    -- Sections
     local function createSection(name)
         local section = Instance.new("ScrollingFrame")
         section.Name = name
@@ -1195,22 +1011,17 @@ local function createUI()
     local visualSection = createSection("Visual")
     local configSection = createSection("Config")
 
-    -- Função para trocar tabs
     local currentTab = "Player"
     local function switchTab(name)
         for tabName, tabData in pairs(tabs) do
             if tabName == name then
                 sections[tabName].Visible = true
                 tabData.stroke.Thickness = 2
-                TweenService:Create(tabData.button, TweenInfo.new(0.3), {
-                    BackgroundColor3 = CurrentTheme.primary
-                }):Play()
+                TweenService:Create(tabData.button, TweenInfo.new(0.3), {BackgroundColor3 = CurrentTheme.primary}):Play()
             else
                 sections[tabName].Visible = false
                 tabData.stroke.Thickness = 0
-                TweenService:Create(tabData.button, TweenInfo.new(0.3), {
-                    BackgroundColor3 = CurrentTheme.surface
-                }):Play()
+                TweenService:Create(tabData.button, TweenInfo.new(0.3), {BackgroundColor3 = CurrentTheme.surface}):Play()
             end
         end
         currentTab = name
@@ -1219,28 +1030,25 @@ local function createUI()
     playerTab.MouseButton1Click:Connect(function() switchTab("Player") end)
     visualTab.MouseButton1Click:Connect(function() switchTab("Visual") end)
     configTab.MouseButton1Click:Connect(function() switchTab("Config") end)
-
     switchTab("Player")
 
-    -- Player Section
-    createModernSlider(playerSection, "⚡", "Speed Boost", 16, 100, Settings.Speed.value,
-        function(value) Settings.Speed.value = value end,
-        Settings.Speed.value
-    )
+    createModernSlider(playerSection, "⚡", "Speed Boost", 16, 100, Settings.Speed.value, function(value) Settings.Speed.value = value end, Settings.Speed.value)
 
     createModernToggle(playerSection, "🏃", "Enable Speed", function(enabled)
         Settings.Speed.enabled = enabled
         ConnectionManager:remove("Speed")
         if enabled then
             ConnectionManager:add("Speed", RunService.Heartbeat:Connect(function()
-                local char = LocalPlayer.Character
-                if not char then return end
-                local humanoid = Cache:get(char, "Humanoid")
-                local rootPart = Cache:get(char, "HumanoidRootPart")
-                if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
-                    local velocity = humanoid.MoveDirection * Settings.Speed.value
-                    rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
-                end
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if not char then return end
+                    local humanoid = char:FindFirstChild("Humanoid")
+                    local rootPart = char:FindFirstChild("HumanoidRootPart")
+                    if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
+                        local velocity = humanoid.MoveDirection * Settings.Speed.value
+                        rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
+                    end
+                end)
             end))
             NotificationSystem:show("Speed ativado!", "success")
         else
@@ -1248,10 +1056,7 @@ local function createUI()
         end
     end, Settings.Speed.enabled)
 
-    createModernSlider(playerSection, "🚀", "Jump Power", 50, 200, Settings.Jump.value,
-        function(value) Settings.Jump.value = value end,
-        Settings.Jump.value
-    )
+    createModernSlider(playerSection, "🚀", "Jump Power", 50, 200, Settings.Jump.value, function(value) Settings.Jump.value = value end, Settings.Jump.value)
 
     local canJump = true
     createModernToggle(playerSection, "🦘", "Enable Jump", function(enabled)
@@ -1260,17 +1065,19 @@ local function createUI()
         if enabled then
             ConnectionManager:add("Jump", UserInputService.JumpRequest:Connect(function()
                 if not canJump then return end
-                local char = LocalPlayer.Character
-                if not char then return end
-                local rootPart = Cache:get(char, "HumanoidRootPart")
-                if rootPart then
-                    canJump = false
-                    rootPart.Velocity = Vector3.new(rootPart.Velocity.X, Settings.Jump.value, rootPart.Velocity.Z)
-                    task.spawn(function()
-                        task.wait(1.5)
-                        canJump = true
-                    end)
-                end
+                pcall(function()
+                    local char = LocalPlayer.Character
+                    if not char then return end
+                    local rootPart = char:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        canJump = false
+                        rootPart.Velocity = Vector3.new(rootPart.Velocity.X, Settings.Jump.value, rootPart.Velocity.Z)
+                        task.spawn(function()
+                            task.wait(1.5)
+                            canJump = true
+                        end)
+                    end
+                end)
             end))
             NotificationSystem:show("Jump ativado!", "success")
         else
@@ -1281,7 +1088,6 @@ local function createUI()
     createModernToggle(playerSection, "🌊", "Float Mode", function(enabled)
         Settings.FloatV1.enabled = enabled
         setupFloatV1()
-        NotificationSystem:show(enabled and "Float ativado!" or "Float desativado", enabled and "success" or "info")
     end, Settings.FloatV1.enabled)
 
     createModernToggle(playerSection, "🛡", "Anti-Hit Shield", function(enabled)
@@ -1289,7 +1095,6 @@ local function createUI()
         setupAntiHit()
     end, Settings.AntiHit.enabled)
 
-    -- Visual Section
     createModernToggle(visualSection, "🎯", "ESP Best Target", function(enabled)
         Settings.ESPBetter.enabled = enabled
         setupESPBetter()
@@ -1298,10 +1103,8 @@ local function createUI()
     createModernToggle(visualSection, "👥", "ESP Players", function(enabled)
         Settings.ESP.enabled = enabled
         setupESPPlayers()
-        NotificationSystem:show(enabled and "ESP Players ativado!" or "ESP Players desativado", enabled and "success" or "info")
     end, Settings.ESP.enabled)
 
-    -- Color Picker
     local colorFrame = Instance.new("Frame")
     colorFrame.Size = UDim2.new(1, -10, 0, 150)
     colorFrame.BackgroundColor3 = CurrentTheme.surface
@@ -1362,9 +1165,7 @@ local function createUI()
                 for _, nametag in pairs(Settings.ESP.nametags) do
                     if nametag and nametag.Parent then
                         local label = nametag:FindFirstChild("TextLabel")
-                        if label then
-                            label.TextColor3 = colorData.color
-                        end
+                        if label then label.TextColor3 = colorData.color end
                     end
                 end
             end
@@ -1372,8 +1173,6 @@ local function createUI()
         end)
     end
 
-    -- Config Section
-    -- Theme Selector
     local themeFrame = Instance.new("Frame")
     themeFrame.Size = UDim2.new(1, -10, 0, 120)
     themeFrame.BackgroundColor3 = CurrentTheme.surface
@@ -1421,10 +1220,7 @@ local function createUI()
         themeBtnCorner.Parent = themeBtn
 
         local themeBtnGradient = Instance.new("UIGradient")
-        themeBtnGradient.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0, themeColors.primary),
-            ColorSequenceKeypoint.new(1, themeColors.secondary)
-        }
+        themeBtnGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, themeColors.primary), ColorSequenceKeypoint.new(1, themeColors.secondary)}
         themeBtnGradient.Rotation = 45
         themeBtnGradient.Parent = themeBtn
 
@@ -1432,18 +1228,12 @@ local function createUI()
             Settings.Theme = themeName
             CurrentTheme = Themes[themeName]
             NotificationSystem:show("Tema: " .. themeName, "success")
-            
-            -- Atualizar cores da UI
             header.BackgroundColor3 = CurrentTheme.primary
-            headerGradient.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, CurrentTheme.primary),
-                ColorSequenceKeypoint.new(1, CurrentTheme.secondary)
-            }
+            headerGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.secondary)}
             mainFrame.BackgroundColor3 = CurrentTheme.background
         end)
     end
 
-    -- Config Buttons
     local configButtons = Instance.new("Frame")
     configButtons.Size = UDim2.new(1, -10, 0, 150)
     configButtons.BackgroundTransparency = 1
@@ -1474,20 +1264,7 @@ local function createUI()
         btnStroke.Transparency = 0.7
         btnStroke.Parent = btn
 
-        btn.MouseEnter:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {
-                BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.1)
-            }):Play()
-        end)
-
-        btn.MouseLeave:Connect(function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {
-                BackgroundColor3 = color
-            }):Play()
-        end)
-
         btn.MouseButton1Click:Connect(function()
-            -- Efeito de clique
             local clickEffect = Instance.new("Frame")
             clickEffect.Size = UDim2.new(0, 0, 0, 0)
             clickEffect.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -1501,17 +1278,11 @@ local function createUI()
             effectCorner.CornerRadius = UDim.new(0, 10)
             effectCorner.Parent = clickEffect
 
-            TweenService:Create(clickEffect, TweenInfo.new(0.5), {
-                Size = UDim2.new(1, 0, 1, 0),
-                BackgroundTransparency = 1
-            }):Play()
-
+            TweenService:Create(clickEffect, TweenInfo.new(0.5), {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1}):Play()
             task.wait(0.5)
-            clickEffect:Destroy()
-            
+            pcall(function() clickEffect:Destroy() end)
             callback()
         end)
-
         return btn
     end
 
@@ -1523,9 +1294,7 @@ local function createUI()
     createConfigButton("Load Config", "📂", Color3.fromRGB(30, 144, 255), function()
         local success = loadConfig()
         NotificationSystem:show(success and "Config carregada!" or "Sem config", success and "success" or "error")
-        if success then
-            switchTab(currentTab)
-        end
+        if success then switchTab(currentTab) end
     end)
 
     createConfigButton("Reset Config", "🔄", Color3.fromRGB(220, 20, 60), function()
@@ -1533,11 +1302,11 @@ local function createUI()
         NotificationSystem:show(success and "Config resetada!" or "Erro", success and "success" or "error")
         if success then
             cleanupExistingGUI()
+            task.wait(0.5)
             createUI()
         end
     end)
 
-    -- Info Panel
     local infoFrame = Instance.new("Frame")
     infoFrame.Size = UDim2.new(1, -10, 0, 80)
     infoFrame.BackgroundColor3 = CurrentTheme.surface
@@ -1559,7 +1328,6 @@ local function createUI()
     infoText.TextWrapped = true
     infoText.Parent = infoFrame
 
-    -- Minimized UI
     local minimizedFrame = Instance.new("Frame")
     minimizedFrame.Size = UDim2.new(0, 60, 0, 60)
     minimizedFrame.Position = UDim2.new(0, 20, 0.5, -30)
@@ -1573,10 +1341,7 @@ local function createUI()
     miniCorner.Parent = minimizedFrame
 
     local miniGradient = Instance.new("UIGradient")
-    miniGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, CurrentTheme.primary),
-        ColorSequenceKeypoint.new(1, CurrentTheme.secondary)
-    }
+    miniGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.secondary)}
     miniGradient.Rotation = 135
     miniGradient.Parent = minimizedFrame
 
@@ -1601,17 +1366,13 @@ local function createUI()
     miniButton.Text = ""
     miniButton.Parent = minimizedFrame
 
-    -- Animação de pulse no minimizado
     task.spawn(function()
-        while minimizedFrame do
+        while minimizedFrame and minimizedFrame.Parent do
             if minimizedFrame.Visible then
-                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    TextSize = 35
-                }):Play()
+                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 35}):Play()
                 task.wait(1)
-                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                    TextSize = 30
-                }):Play()
+                if not minimizedFrame or not minimizedFrame.Parent then break end
+                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 30}):Play()
                 task.wait(1)
             else
                 task.wait(2)
@@ -1619,89 +1380,55 @@ local function createUI()
         end
     end)
 
-    -- Setup drag
     setupDrag(mainFrame, header)
     setupDrag(minimizedFrame, minimizedFrame)
 
-    -- Minimize button
     minimizeBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
-            Position = minimizedFrame.Position
-        }):Play()
-        
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), Position = minimizedFrame.Position}):Play()
         TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
-        
         task.wait(0.3)
         mainFrame.Visible = false
         minimizedFrame.Visible = true
-        
-        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, 60, 0, 60)
-        }):Play()
+        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 60, 0, 60)}):Play()
     end)
 
-    -- Restore from minimized
     miniButton.MouseButton1Click:Connect(function()
         minimizedFrame.Visible = false
         mainFrame.Visible = true
         mainFrame.Size = UDim2.new(0, 0, 0, 0)
         mainFrame.Position = minimizedFrame.Position
-        
         TweenService:Create(blur, TweenInfo.new(0.3), {Size = 10}):Play()
-        
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600),
-            Position = UDim2.new(0.5, 0, 0.5, 0)
-        }):Play()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600), Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
     end)
 
-    -- Close button
     closeBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0)
-        }):Play()
-        
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
         TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
-        
         task.wait(0.3)
         cleanup()
-        blur:Destroy()
+        pcall(function() blur:Destroy() end)
     end)
+
+    print("🦈 SharkHUB: UI criada com sucesso!")
 end
 
--- Cleanup
 local function cleanup()
     ConnectionManager:cleanup()
-    
-    if currentESP then currentESP:Destroy() currentESP = nil end
-    for _, hl in pairs(highlights) do if hl and hl.Parent then hl:Destroy() end end
+    if currentESP then pcall(function() currentESP:Destroy() end) currentESP = nil end
+    for _, hl in pairs(highlights) do pcall(function() if hl and hl.Parent then hl:Destroy() end end) end
     highlights = {}
-    
-    for _, highlight in pairs(Settings.ESP.highlights) do
-        if highlight and highlight.Parent then highlight:Destroy() end
-    end
-    for _, nametag in pairs(Settings.ESP.nametags) do
-        if nametag and nametag.Parent then nametag:Destroy() end
-    end
+    for _, highlight in pairs(Settings.ESP.highlights) do pcall(function() if highlight and highlight.Parent then highlight:Destroy() end end) end
+    for _, nametag in pairs(Settings.ESP.nametags) do pcall(function() if nametag and nametag.Parent then nametag:Destroy() end end) end
     Settings.ESP.highlights = {}
     Settings.ESP.nametags = {}
-    
     Cache:clear()
     StateManager:set("floatV1", false)
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
-    
-    pcall(function()
-        if setfflag then
-            setfflag("WorldStepMax", "-1")
-        end
-    end)
-    
+    pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
     cleanupExistingGUI()
 end
 
--- Events
 Players.PlayerRemoving:Connect(function(player)
     if player == LocalPlayer then cleanup() end
 end)
@@ -1710,18 +1437,19 @@ LocalPlayer.CharacterAdded:Connect(function()
     if Settings.AntiHit.enabled then
         Settings.AntiHit.enabled = false
         StateManager:set("antiHit", false)
-        pcall(function()
-            if setfflag then
-                setfflag("WorldStepMax", "-1")
-            end
-        end)
+        pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
         NotificationSystem:show("Anti-Hit desativado ao respawnar", "info")
     end
 end)
 
--- Inicializar
-createUI()
-NotificationSystem:show("SharkHUB carregado!", "success")
+task.spawn(function()
+    pcall(function()
+        createUI()
+        task.wait(0.5)
+        NotificationSystem:show("SharkHUB carregado!", "success")
+    end)
+end)
+
 print("🦈 SharkHUB Premium v2.0 - Interface Ultra Moderna")
 print("💎 Desenvolvido com animações fluidas e design responsivo")
-    themeTitle
+print("✅ Script carregado! A UI deve aparecer em instantes.")
