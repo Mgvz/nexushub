@@ -1,4 +1,4 @@
--- SharkHUB Premium V2 - Interface Ultra Moderna
+-- SharkHUB Premium V2 - UI Otimizada e Clean
 -- COPIE ESTE CÓDIGO COMPLETO E EXECUTE NO SEU EXECUTOR
 
 if not game:IsLoaded() then game.Loaded:Wait() end
@@ -83,8 +83,8 @@ local NotificationSystem = {
         if not gui then self.showing = false return end
         
         local notif = Instance.new("Frame")
-        notif.Size = UDim2.new(0, mobile and 200 or 300, 0, mobile and 40 or 60)
-        notif.Position = UDim2.new(1, 20, 0, 100)
+        notif.Size = UDim2.new(0, mobile and 180 or 250, 0, mobile and 35 or 50)
+        notif.Position = UDim2.new(1, 20, 0, 80)
         notif.BackgroundColor3 = data.type == "success" and Color3.fromRGB(34, 139, 34) 
             or data.type == "error" and Color3.fromRGB(220, 20, 60) 
             or Color3.fromRGB(0, 162, 232)
@@ -92,12 +92,12 @@ local NotificationSystem = {
         notif.Parent = gui
         
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, mobile and 8 or 12)
+        corner.CornerRadius = UDim.new(0, mobile and 6 or 10)
         corner.Parent = notif
         
         local shadow = Instance.new("UIStroke")
         shadow.Color = Color3.fromRGB(0, 0, 0)
-        shadow.Thickness = mobile and 2 or 4
+        shadow.Thickness = mobile and 1 or 2
         shadow.Transparency = 0.8
         shadow.Parent = notif
         
@@ -107,22 +107,22 @@ local NotificationSystem = {
         label.BackgroundTransparency = 1
         label.Text = data.text
         label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextSize = mobile and 11 or 16
+        label.TextSize = mobile and 10 or 14
         label.Font = Enum.Font.GothamBold
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextWrapped = true
         label.Parent = notif
         
-        local targetPos = mobile and -210 or -320
-        TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
-            Position = UDim2.new(1, targetPos, 0, 100)
+        local targetPos = mobile and -190 or -260
+        TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+            Position = UDim2.new(1, targetPos, 0, 80)
         }):Play()
         
-        task.wait(2.5)
-        TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Position = UDim2.new(1, 20, 0, 100)
+        task.wait(2)
+        TweenService:Create(notif, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 20, 0, 80)
         }):Play()
-        task.wait(0.5)
+        task.wait(0.4)
         pcall(function() notif:Destroy() end)
         self:processQueue()
     end
@@ -134,42 +134,18 @@ local Settings = {
     FloatV1 = {enabled = false}, 
     ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
     ESPBetter = {enabled = false},
-    AntiHit = {enabled = false},
-    Theme = "Ocean"
+    AntiHit = {enabled = false}
 }
 
-local Themes = {
-    Ocean = {
-        primary = Color3.fromRGB(0, 162, 232),
-        secondary = Color3.fromRGB(0, 100, 148),
-        accent = Color3.fromRGB(0, 255, 255),
-        background = Color3.fromRGB(10, 20, 35),
-        surface = Color3.fromRGB(15, 30, 45)
-    },
-    Neon = {
-        primary = Color3.fromRGB(255, 0, 128),
-        secondary = Color3.fromRGB(128, 0, 255),
-        accent = Color3.fromRGB(0, 255, 255),
-        background = Color3.fromRGB(10, 10, 20),
-        surface = Color3.fromRGB(20, 20, 30)
-    },
-    Forest = {
-        primary = Color3.fromRGB(34, 139, 34),
-        secondary = Color3.fromRGB(85, 107, 47),
-        accent = Color3.fromRGB(144, 238, 144),
-        background = Color3.fromRGB(20, 25, 20),
-        surface = Color3.fromRGB(30, 35, 30)
-    },
-    Sunset = {
-        primary = Color3.fromRGB(255, 94, 77),
-        secondary = Color3.fromRGB(255, 154, 0),
-        accent = Color3.fromRGB(255, 206, 84),
-        background = Color3.fromRGB(25, 15, 20),
-        surface = Color3.fromRGB(35, 25, 30)
-    }
+-- Tema fixo do Tubarão (Ocean/Shark)
+local SharkTheme = {
+    primary = Color3.fromRGB(0, 162, 232),      -- Azul oceano
+    secondary = Color3.fromRGB(0, 100, 148),    -- Azul profundo
+    accent = Color3.fromRGB(0, 255, 255),       -- Ciano brilhante
+    background = Color3.fromRGB(10, 20, 35),    -- Azul escuro
+    surface = Color3.fromRGB(15, 30, 45),       -- Azul médio
+    shark = Color3.fromRGB(70, 130, 180)        -- Azul tubarão
 }
-
-local CurrentTheme = Themes[Settings.Theme]
 
 local ColorPalette = {
     {name = "Ocean", color = Color3.fromRGB(0, 162, 232)},
@@ -181,9 +157,7 @@ local ColorPalette = {
     {name = "Sand", color = Color3.fromRGB(238, 203, 173)},
     {name = "Storm", color = Color3.fromRGB(70, 70, 110)},
     {name = "Blood", color = Color3.fromRGB(220, 20, 60)},
-    {name = "Night", color = Color3.fromRGB(25, 25, 112)},
-    {name = "Foam", color = Color3.fromRGB(176, 224, 230)},
-    {name = "Reef", color = Color3.fromRGB(127, 255, 212)}
+    {name = "Night", color = Color3.fromRGB(25, 25, 112)}
 }
 
 local CONFIG_FILE_NAME = "SharkHUB_Config.json"
@@ -275,7 +249,7 @@ local function setupESPBetter()
                     
                     local back = Instance.new("Frame")
                     back.BackgroundTransparency = 0.15
-                    back.BackgroundColor3 = CurrentTheme.surface
+                    back.BackgroundColor3 = SharkTheme.surface
                     back.Size = UDim2.new(1, 0, 1, 0)
                     back.Position = UDim2.new(0.5, 0, 0.5, 0)
                     back.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -286,7 +260,7 @@ local function setupESPBetter()
                     uicorner.Parent = back
                     
                     local uistroke = Instance.new("UIStroke")
-                    uistroke.Color = CurrentTheme.primary
+                    uistroke.Color = SharkTheme.primary
                     uistroke.Thickness = 2
                     uistroke.Parent = back
                     
@@ -294,7 +268,7 @@ local function setupESPBetter()
                     textLabel.Size = UDim2.new(0.9, 0, 0.9, 0)
                     textLabel.Position = UDim2.new(0.05, 0, 0.05, 0)
                     textLabel.BackgroundTransparency = 1
-                    textLabel.TextColor3 = CurrentTheme.accent
+                    textLabel.TextColor3 = SharkTheme.accent
                     textLabel.TextScaled = true
                     textLabel.Font = Enum.Font.GothamBold
                     textLabel.Text = string.format("🎯 %s\n%s | %s", bestAnimal.nome, bestAnimal.raridade, bestAnimal.porSegundo)
@@ -310,8 +284,8 @@ local function setupESPBetter()
                                     pcall(function()
                                         local hl = Instance.new("Highlight")
                                         hl.Name = "ESP_Deco"
-                                        hl.FillColor = CurrentTheme.primary
-                                        hl.OutlineColor = CurrentTheme.secondary
+                                        hl.FillColor = SharkTheme.primary
+                                        hl.OutlineColor = SharkTheme.secondary
                                         hl.FillTransparency = 0.5
                                         hl.OutlineTransparency = 0
                                         hl.Parent = d
@@ -324,7 +298,7 @@ local function setupESPBetter()
                 end)
             end
         end))
-        NotificationSystem:show("ESP Target ativado!", "success")
+        NotificationSystem:show("ESP Target ativo!", "success")
     else
         NotificationSystem:show("ESP Target desativado", "info")
     end
@@ -382,7 +356,7 @@ local function setupAntiHit()
                 teleportRemote:FireServer()
                 task.wait(2)
                 if setfflag then setfflag("WorldStepMax", "-1") end
-                NotificationSystem:show("Anti-Hit ativado!", "success")
+                NotificationSystem:show("Anti-Hit ativo!", "success")
             end)
             
             if not success then
@@ -466,7 +440,7 @@ local function setupESPPlayers()
                 Settings.ESP.nametags[player] = nil
             end
         end))
-        NotificationSystem:show("ESP Players ativado!", "success")
+        NotificationSystem:show("ESP Players ativo!", "success")
     else
         NotificationSystem:show("ESP Players desativado", "info")
     end
@@ -480,8 +454,7 @@ local function saveConfig()
         FloatV1 = {enabled = Settings.FloatV1.enabled},
         ESP = {enabled = Settings.ESP.enabled, color = {Settings.ESP.color.R * 255, Settings.ESP.color.G * 255, Settings.ESP.color.B * 255}},
         ESPBetter = {enabled = Settings.ESPBetter.enabled},
-        AntiHit = {enabled = Settings.AntiHit.enabled},
-        Theme = Settings.Theme
+        AntiHit = {enabled = Settings.AntiHit.enabled}
     }
     local success, encoded = pcall(function() return HttpService:JSONEncode(configToSave) end)
     if success then writefile(CONFIG_FILE_NAME, encoded) return true end
@@ -502,9 +475,6 @@ local function loadConfig()
                             Settings[key][subKey] = subValue
                         end
                     end
-                elseif key == "Theme" then
-                    Settings.Theme = value
-                    CurrentTheme = Themes[value] or Themes.Ocean
                 end
             end
             return true
@@ -527,8 +497,7 @@ local function resetConfig()
         FloatV1 = {enabled = false}, 
         ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
         ESPBetter = {enabled = false},
-        AntiHit = {enabled = false},
-        Theme = "Ocean"
+        AntiHit = {enabled = false}
     }
     
     StateManager:set("floatV1", false)
@@ -554,7 +523,7 @@ local function setupFloatV1()
                 if hrp and cam then hrp.Velocity = cam.CFrame.LookVector * 25 end
             end)
         end))
-        NotificationSystem:show("Float ativado!", "success")
+        NotificationSystem:show("Float ativo!", "success")
     else
         NotificationSystem:show("Float desativado", "info")
     end
@@ -568,51 +537,46 @@ end
 local function createModernToggle(parent, icon, text, callback, currentState)
     local mobile = isMobile()
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -10, 0, mobile and 50 or 70)
-    container.BackgroundColor3 = CurrentTheme.surface
+    container.Size = UDim2.new(1, -10, 0, mobile and 45 or 55)
+    container.BackgroundColor3 = SharkTheme.surface
     container.BorderSizePixel = 0
     container.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = container
 
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.surface), ColorSequenceKeypoint.new(1, CurrentTheme.background)}
-    gradient.Rotation = 90
-    gradient.Parent = container
-
     local iconLabel = Instance.new("TextLabel")
-    iconLabel.Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)
-    iconLabel.Position = UDim2.new(0, 10, 0.5, 0)
+    iconLabel.Size = UDim2.new(0, mobile and 28 or 35, 0, mobile and 28 or 35)
+    iconLabel.Position = UDim2.new(0, 8, 0.5, 0)
     iconLabel.AnchorPoint = Vector2.new(0, 0.5)
-    iconLabel.BackgroundColor3 = CurrentTheme.primary
+    iconLabel.BackgroundColor3 = SharkTheme.primary
     iconLabel.Text = icon
     iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    iconLabel.TextSize = mobile and 16 or 20
+    iconLabel.TextSize = mobile and 14 or 18
     iconLabel.Font = Enum.Font.GothamBold
     iconLabel.Parent = container
 
     local iconCorner = Instance.new("UICorner")
-    iconCorner.CornerRadius = UDim.new(0, 8)
+    iconCorner.CornerRadius = UDim.new(0, 6)
     iconCorner.Parent = iconLabel
 
     local textLabel = Instance.new("TextLabel")
     textLabel.Size = UDim2.new(0.5, 0, 1, 0)
-    textLabel.Position = UDim2.new(0, mobile and 50 or 65, 0, 0)
+    textLabel.Position = UDim2.new(0, mobile and 44 or 52, 0, 0)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = text
-    textLabel.TextColor3 = CurrentTheme.accent
-    textLabel.TextSize = mobile and 12 or 16
+    textLabel.TextColor3 = SharkTheme.accent
+    textLabel.TextSize = mobile and 11 or 14
     textLabel.Font = Enum.Font.GothamBold
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
     textLabel.Parent = container
 
     local switchFrame = Instance.new("Frame")
-    switchFrame.Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 25 or 30)
-    switchFrame.Position = UDim2.new(1, mobile and -60 or -70, 0.5, 0)
+    switchFrame.Size = UDim2.new(0, mobile and 45 or 54, 0, mobile and 22 or 26)
+    switchFrame.Position = UDim2.new(1, mobile and -52 or -62, 0.5, 0)
     switchFrame.AnchorPoint = Vector2.new(0, 0.5)
-    switchFrame.BackgroundColor3 = currentState and CurrentTheme.primary or Color3.fromRGB(60, 60, 60)
+    switchFrame.BackgroundColor3 = currentState and SharkTheme.primary or Color3.fromRGB(60, 60, 60)
     switchFrame.BorderSizePixel = 0
     switchFrame.Parent = container
 
@@ -621,8 +585,8 @@ local function createModernToggle(parent, icon, text, callback, currentState)
     switchCorner.Parent = switchFrame
 
     local switchBall = Instance.new("Frame")
-    switchBall.Size = UDim2.new(0, mobile and 21 or 26, 0, mobile and 21 or 26)
-    switchBall.Position = currentState and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+    switchBall.Size = UDim2.new(0, mobile and 18 or 22, 0, mobile and 18 or 22)
+    switchBall.Position = currentState and UDim2.new(1, -20, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
     switchBall.AnchorPoint = Vector2.new(0, 0.5)
     switchBall.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     switchBall.BorderSizePixel = 0
@@ -631,12 +595,6 @@ local function createModernToggle(parent, icon, text, callback, currentState)
     local ballCorner = Instance.new("UICorner")
     ballCorner.CornerRadius = UDim.new(1, 0)
     ballCorner.Parent = switchBall
-
-    local ballShadow = Instance.new("UIStroke")
-    ballShadow.Color = Color3.fromRGB(0, 0, 0)
-    ballShadow.Thickness = 2
-    ballShadow.Transparency = 0.8
-    ballShadow.Parent = switchBall
 
     local switchButton = Instance.new("TextButton")
     switchButton.Size = UDim2.new(1, 0, 1, 0)
@@ -648,11 +606,8 @@ local function createModernToggle(parent, icon, text, callback, currentState)
 
     switchButton.MouseButton1Click:Connect(function()
         isEnabled = not isEnabled
-        TweenService:Create(switchFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {BackgroundColor3 = isEnabled and CurrentTheme.primary or Color3.fromRGB(60, 60, 60)}):Play()
-        TweenService:Create(switchBall, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = isEnabled and UDim2.new(1, mobile and -23 or -28, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
-        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 35 or 45, 0, mobile and 35 or 45)}):Play()
-        task.wait(0.2)
-        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)}):Play()
+        TweenService:Create(switchFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {BackgroundColor3 = isEnabled and SharkTheme.primary or Color3.fromRGB(60, 60, 60)}):Play()
+        TweenService:Create(switchBall, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {Position = isEnabled and UDim2.new(1, mobile and -20 or -24, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
         if callback then callback(isEnabled) end
     end)
     return container
@@ -661,66 +616,61 @@ end
 local function createModernSlider(parent, icon, text, min, max, default, callback, current)
     local mobile = isMobile()
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -10, 0, mobile and 80 or 100)
-    container.BackgroundColor3 = CurrentTheme.surface
+    container.Size = UDim2.new(1, -10, 0, mobile and 70 or 85)
+    container.BackgroundColor3 = SharkTheme.surface
     container.BorderSizePixel = 0
     container.Parent = parent
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = container
 
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.surface), ColorSequenceKeypoint.new(1, CurrentTheme.background)}
-    gradient.Rotation = 90
-    gradient.Parent = container
-
     local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, mobile and 40 or 50)
+    header.Size = UDim2.new(1, 0, 0, mobile and 35 or 42)
     header.BackgroundTransparency = 1
     header.Parent = container
 
     local iconLabel = Instance.new("TextLabel")
-    iconLabel.Size = UDim2.new(0, mobile and 25 or 35, 0, mobile and 25 or 35)
-    iconLabel.Position = UDim2.new(0, 10, 0.5, 0)
+    iconLabel.Size = UDim2.new(0, mobile and 22 or 28, 0, mobile and 22 or 28)
+    iconLabel.Position = UDim2.new(0, 8, 0.5, 0)
     iconLabel.AnchorPoint = Vector2.new(0, 0.5)
-    iconLabel.BackgroundColor3 = CurrentTheme.primary
+    iconLabel.BackgroundColor3 = SharkTheme.primary
     iconLabel.Text = icon
     iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    iconLabel.TextSize = mobile and 14 or 18
+    iconLabel.TextSize = mobile and 12 or 16
     iconLabel.Font = Enum.Font.GothamBold
     iconLabel.Parent = header
 
     local iconCorner = Instance.new("UICorner")
-    iconCorner.CornerRadius = UDim.new(0, 6)
+    iconCorner.CornerRadius = UDim.new(0, 5)
     iconCorner.Parent = iconLabel
 
     local textLabel = Instance.new("TextLabel")
     textLabel.Size = UDim2.new(0.5, 0, 1, 0)
-    textLabel.Position = UDim2.new(0, mobile and 45 or 55, 0, 0)
+    textLabel.Position = UDim2.new(0, mobile and 38 or 44, 0, 0)
     textLabel.BackgroundTransparency = 1
     textLabel.Text = text
-    textLabel.TextColor3 = CurrentTheme.accent
-    textLabel.TextSize = mobile and 11 or 15
+    textLabel.TextColor3 = SharkTheme.accent
+    textLabel.TextSize = mobile and 10 or 13
     textLabel.Font = Enum.Font.GothamBold
     textLabel.TextXAlignment = Enum.TextXAlignment.Left
     textLabel.Parent = header
 
     local currentValue = current or default
     local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 60, 1, 0)
-    valueLabel.Position = UDim2.new(1, -70, 0, 0)
+    valueLabel.Size = UDim2.new(0, 50, 1, 0)
+    valueLabel.Position = UDim2.new(1, -58, 0, 0)
     valueLabel.BackgroundTransparency = 1
     valueLabel.Text = tostring(currentValue)
-    valueLabel.TextColor3 = CurrentTheme.primary
-    valueLabel.TextSize = mobile and 14 or 18
+    valueLabel.TextColor3 = SharkTheme.primary
+    valueLabel.TextSize = mobile and 12 or 16
     valueLabel.Font = Enum.Font.GothamBold
     valueLabel.TextXAlignment = Enum.TextXAlignment.Right
     valueLabel.Parent = header
 
     local sliderFrame = Instance.new("Frame")
-    sliderFrame.Size = UDim2.new(1, -20, 0, mobile and 8 or 10)
-    sliderFrame.Position = UDim2.new(0, 10, 1, mobile and -20 or -25)
+    sliderFrame.Size = UDim2.new(1, -16, 0, mobile and 6 or 8)
+    sliderFrame.Position = UDim2.new(0, 8, 1, mobile and -18 or -22)
     sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     sliderFrame.BorderSizePixel = 0
     sliderFrame.Parent = container
@@ -731,7 +681,7 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
 
     local sliderFill = Instance.new("Frame")
     sliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = CurrentTheme.primary
+    sliderFill.BackgroundColor3 = SharkTheme.primary
     sliderFill.BorderSizePixel = 0
     sliderFill.Parent = sliderFrame
 
@@ -739,13 +689,9 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     fillCorner.CornerRadius = UDim.new(1, 0)
     fillCorner.Parent = sliderFill
 
-    local fillGradient = Instance.new("UIGradient")
-    fillGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.accent)}
-    fillGradient.Parent = sliderFill
-
     local sliderThumb = Instance.new("Frame")
-    sliderThumb.Size = UDim2.new(0, mobile and 16 or 20, 0, mobile and 16 or 20)
-    sliderThumb.Position = UDim2.new((currentValue - min) / (max - min), -10, 0.5, 0)
+    sliderThumb.Size = UDim2.new(0, mobile and 14 or 18, 0, mobile and 14 or 18)
+    sliderThumb.Position = UDim2.new((currentValue - min) / (max - min), -9, 0.5, 0)
     sliderThumb.AnchorPoint = Vector2.new(0, 0.5)
     sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     sliderThumb.BorderSizePixel = 0
@@ -756,7 +702,7 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
     thumbCorner.Parent = sliderThumb
 
     local thumbShadow = Instance.new("UIStroke")
-    thumbShadow.Color = CurrentTheme.primary
+    thumbShadow.Color = SharkTheme.primary
     thumbShadow.Thickness = 2
     thumbShadow.Parent = sliderThumb
 
@@ -772,7 +718,7 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
         local relativeX = math.clamp((position.X - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X, 0, 1)
         currentValue = math.floor(min + (max - min) * relativeX)
         sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-        sliderThumb.Position = UDim2.new(relativeX, -10, 0.5, 0)
+        sliderThumb.Position = UDim2.new(relativeX, -9, 0.5, 0)
         valueLabel.Text = tostring(currentValue)
         if callback then callback(currentValue) end
     end
@@ -781,14 +727,12 @@ local function createModernSlider(parent, icon, text, min, max, default, callbac
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             updateSlider(input.Position)
-            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {Size = UDim2.new(0, mobile and 20 or 24, 0, mobile and 20 or 24)}):Play()
         end
     end)
     
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
-            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {Size = UDim2.new(0, mobile and 16 or 20, 0, mobile and 16 or 20)}):Play()
         end
     end)
 
@@ -837,114 +781,115 @@ local function createUI()
     blur.Size = 0
     blur.Parent = Lighting
 
+    -- TAMANHO REDUZIDO DA UI
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)
+    mainFrame.Size = UDim2.new(0, mobile and 260 or 400, 0, mobile and 360 or 480)
     mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    mainFrame.BackgroundColor3 = CurrentTheme.background
+    mainFrame.BackgroundColor3 = SharkTheme.background
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = screenGui
 
     local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, 20)
+    mainCorner.CornerRadius = UDim.new(0, 16)
     mainCorner.Parent = mainFrame
 
     local mainShadow = Instance.new("UIStroke")
     mainShadow.Color = Color3.fromRGB(0, 0, 0)
-    mainShadow.Thickness = 4
+    mainShadow.Thickness = 3
     mainShadow.Transparency = 0.7
     mainShadow.Parent = mainFrame
 
     mainFrame.Size = UDim2.new(0, 0, 0, 0)
-    TweenService:Create(blur, TweenInfo.new(0.5), {Size = 10}):Play()
-    TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)}):Play()
+    TweenService:Create(blur, TweenInfo.new(0.4), {Size = 8}):Play()
+    TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 260 or 400, 0, mobile and 360 or 480)}):Play()
 
     local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, mobile and 60 or 80)
-    header.BackgroundColor3 = CurrentTheme.primary
+    header.Size = UDim2.new(1, 0, 0, mobile and 50 or 65)
+    header.BackgroundColor3 = SharkTheme.primary
     header.BorderSizePixel = 0
     header.Parent = mainFrame
 
     local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, 20)
+    headerCorner.CornerRadius = UDim.new(0, 16)
     headerCorner.Parent = header
 
     local headerFix = Instance.new("Frame")
-    headerFix.Size = UDim2.new(1, 0, 0, 20)
-    headerFix.Position = UDim2.new(0, 0, 1, -20)
-    headerFix.BackgroundColor3 = CurrentTheme.primary
+    headerFix.Size = UDim2.new(1, 0, 0, 16)
+    headerFix.Position = UDim2.new(0, 0, 1, -16)
+    headerFix.BackgroundColor3 = SharkTheme.primary
     headerFix.BorderSizePixel = 0
     headerFix.Parent = header
 
     local headerGradient = Instance.new("UIGradient")
-    headerGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.secondary)}
+    headerGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, SharkTheme.primary), ColorSequenceKeypoint.new(1, SharkTheme.secondary)}
     headerGradient.Rotation = 90
     headerGradient.Parent = header
 
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -80, 1, 0)
-    title.Position = UDim2.new(0, 20, 0, 0)
+    title.Size = UDim2.new(1, -70, 1, 0)
+    title.Position = UDim2.new(0, 15, 0, 0)
     title.BackgroundTransparency = 1
     title.Text = "🦈 SHARK HUB"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = mobile and 20 or 28
+    title.TextSize = mobile and 18 or 24
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
 
     local subtitle = Instance.new("TextLabel")
-    subtitle.Size = UDim2.new(1, -80, 0, 20)
-    subtitle.Position = UDim2.new(0, 20, 1, -25)
+    subtitle.Size = UDim2.new(1, -70, 0, 18)
+    subtitle.Position = UDim2.new(0, 15, 1, -22)
     subtitle.BackgroundTransparency = 1
-    subtitle.Text = "Premium Edition v2.0"
-    subtitle.TextColor3 = CurrentTheme.accent
-    subtitle.TextSize = mobile and 10 or 12
+    subtitle.Text = "Premium v2.0"
+    subtitle.TextColor3 = SharkTheme.accent
+    subtitle.TextSize = mobile and 9 or 11
     subtitle.Font = Enum.Font.Gotham
     subtitle.TextXAlignment = Enum.TextXAlignment.Left
     subtitle.Parent = header
 
     local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-    minimizeBtn.Position = UDim2.new(1, -70, 0.5, 0)
+    minimizeBtn.Size = UDim2.new(0, 26, 0, 26)
+    minimizeBtn.Position = UDim2.new(1, -60, 0.5, 0)
     minimizeBtn.AnchorPoint = Vector2.new(0, 0.5)
     minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
     minimizeBtn.Text = "—"
     minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minimizeBtn.TextSize = 20
+    minimizeBtn.TextSize = 18
     minimizeBtn.Font = Enum.Font.GothamBold
     minimizeBtn.BorderSizePixel = 0
     minimizeBtn.Parent = header
 
     local minCorner = Instance.new("UICorner")
-    minCorner.CornerRadius = UDim.new(0, 8)
+    minCorner.CornerRadius = UDim.new(0, 6)
     minCorner.Parent = minimizeBtn
 
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -35, 0.5, 0)
+    closeBtn.Size = UDim2.new(0, 26, 0, 26)
+    closeBtn.Position = UDim2.new(1, -30, 0.5, 0)
     closeBtn.AnchorPoint = Vector2.new(0, 0.5)
     closeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
     closeBtn.Text = "×"
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextSize = 24
+    closeBtn.TextSize = 22
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.BorderSizePixel = 0
     closeBtn.Parent = header
 
     local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, 8)
+    closeCorner.CornerRadius = UDim.new(0, 6)
     closeCorner.Parent = closeBtn
 
     local tabContainer = Instance.new("Frame")
-    tabContainer.Size = UDim2.new(1, -20, 0, mobile and 35 or 45)
-    tabContainer.Position = UDim2.new(0, 10, 0, mobile and 70 or 90)
+    tabContainer.Size = UDim2.new(1, -16, 0, mobile and 32 or 38)
+    tabContainer.Position = UDim2.new(0, 8, 0, mobile and 58 or 73)
     tabContainer.BackgroundTransparency = 1
     tabContainer.Parent = mainFrame
 
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.FillDirection = Enum.FillDirection.Horizontal
-    tabLayout.Padding = UDim.new(0, 5)
+    tabLayout.Padding = UDim.new(0, 4)
     tabLayout.Parent = tabContainer
 
     local sections = {}
@@ -952,21 +897,21 @@ local function createUI()
 
     local function createTab(name, icon)
         local tab = Instance.new("TextButton")
-        tab.Size = UDim2.new(0.333, -5, 1, 0)
-        tab.BackgroundColor3 = CurrentTheme.surface
+        tab.Size = UDim2.new(0.333, -3, 1, 0)
+        tab.BackgroundColor3 = SharkTheme.surface
         tab.Text = icon .. " " .. name
-        tab.TextColor3 = CurrentTheme.accent
-        tab.TextSize = mobile and 12 or 16
+        tab.TextColor3 = SharkTheme.accent
+        tab.TextSize = mobile and 11 or 14
         tab.Font = Enum.Font.GothamBold
         tab.BorderSizePixel = 0
         tab.Parent = tabContainer
 
         local tabCorner = Instance.new("UICorner")
-        tabCorner.CornerRadius = UDim.new(0, 10)
+        tabCorner.CornerRadius = UDim.new(0, 8)
         tabCorner.Parent = tab
 
         local tabStroke = Instance.new("UIStroke")
-        tabStroke.Color = CurrentTheme.primary
+        tabStroke.Color = SharkTheme.primary
         tabStroke.Thickness = 0
         tabStroke.Transparency = 0.5
         tabStroke.Parent = tab
@@ -980,8 +925,8 @@ local function createUI()
     local configTab = createTab("Config", "⚙")
 
     local content = Instance.new("Frame")
-    content.Size = UDim2.new(1, -20, 1, mobile and -120 or -150)
-    content.Position = UDim2.new(0, 10, 0, mobile and 110 or 140)
+    content.Size = UDim2.new(1, -16, 1, mobile and -105 or -125)
+    content.Position = UDim2.new(0, 8, 0, mobile and 95 or 116)
     content.BackgroundTransparency = 1
     content.Parent = mainFrame
 
@@ -991,8 +936,8 @@ local function createUI()
         section.Size = UDim2.new(1, 0, 1, 0)
         section.BackgroundTransparency = 1
         section.BorderSizePixel = 0
-        section.ScrollBarThickness = 4
-        section.ScrollBarImageColor3 = CurrentTheme.primary
+        section.ScrollBarThickness = 3
+        section.ScrollBarImageColor3 = SharkTheme.primary
         section.ScrollBarImageTransparency = 0.5
         section.CanvasSize = UDim2.new(0, 0, 0, 0)
         section.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -1000,7 +945,7 @@ local function createUI()
         section.Parent = content
 
         local sectionLayout = Instance.new("UIListLayout")
-        sectionLayout.Padding = UDim.new(0, 10)
+        sectionLayout.Padding = UDim.new(0, 8)
         sectionLayout.Parent = section
 
         sections[name] = section
@@ -1017,11 +962,11 @@ local function createUI()
             if tabName == name then
                 sections[tabName].Visible = true
                 tabData.stroke.Thickness = 2
-                TweenService:Create(tabData.button, TweenInfo.new(0.3), {BackgroundColor3 = CurrentTheme.primary}):Play()
+                TweenService:Create(tabData.button, TweenInfo.new(0.3), {BackgroundColor3 = SharkTheme.primary}):Play()
             else
                 sections[tabName].Visible = false
                 tabData.stroke.Thickness = 0
-                TweenService:Create(tabData.button, TweenInfo.new(0.3), {BackgroundColor3 = CurrentTheme.surface}):Play()
+                TweenService:Create(tabData.button, TweenInfo.new(0.3), {BackgroundColor3 = SharkTheme.surface}):Play()
             end
         end
         currentTab = name
@@ -1032,6 +977,7 @@ local function createUI()
     configTab.MouseButton1Click:Connect(function() switchTab("Config") end)
     switchTab("Player")
 
+    -- EMOJIS AJUSTADOS PARA OS NOMES
     createModernSlider(playerSection, "⚡", "Speed Boost", 16, 100, Settings.Speed.value, function(value) Settings.Speed.value = value end, Settings.Speed.value)
 
     createModernToggle(playerSection, "🏃", "Enable Speed", function(enabled)
@@ -1050,7 +996,7 @@ local function createUI()
                     end
                 end)
             end))
-            NotificationSystem:show("Speed ativado!", "success")
+            NotificationSystem:show("Speed ativo!", "success")
         else
             NotificationSystem:show("Speed desativado", "info")
         end
@@ -1079,18 +1025,18 @@ local function createUI()
                     end
                 end)
             end))
-            NotificationSystem:show("Jump ativado!", "success")
+            NotificationSystem:show("Jump ativo!", "success")
         else
             NotificationSystem:show("Jump desativado", "info")
         end
     end, Settings.Jump.enabled)
 
-    createModernToggle(playerSection, "🌊", "Float Mode", function(enabled)
+    createModernToggle(playerSection, "🎈", "Float Mode", function(enabled)
         Settings.FloatV1.enabled = enabled
         setupFloatV1()
     end, Settings.FloatV1.enabled)
 
-    createModernToggle(playerSection, "🛡", "Anti-Hit Shield", function(enabled)
+    createModernToggle(playerSection, "🛡️", "Anti-Hit Shield", function(enabled)
         Settings.AntiHit.enabled = enabled
         setupAntiHit()
     end, Settings.AntiHit.enabled)
@@ -1106,35 +1052,35 @@ local function createUI()
     end, Settings.ESP.enabled)
 
     local colorFrame = Instance.new("Frame")
-    colorFrame.Size = UDim2.new(1, -10, 0, 150)
-    colorFrame.BackgroundColor3 = CurrentTheme.surface
+    colorFrame.Size = UDim2.new(1, -10, 0, 130)
+    colorFrame.BackgroundColor3 = SharkTheme.surface
     colorFrame.BorderSizePixel = 0
     colorFrame.Parent = visualSection
 
     local colorCorner = Instance.new("UICorner")
-    colorCorner.CornerRadius = UDim.new(0, 12)
+    colorCorner.CornerRadius = UDim.new(0, 10)
     colorCorner.Parent = colorFrame
 
     local colorTitle = Instance.new("TextLabel")
-    colorTitle.Size = UDim2.new(1, -10, 0, 30)
-    colorTitle.Position = UDim2.new(0, 5, 0, 5)
+    colorTitle.Size = UDim2.new(1, -10, 0, 26)
+    colorTitle.Position = UDim2.new(0, 5, 0, 4)
     colorTitle.BackgroundTransparency = 1
     colorTitle.Text = "🎨 ESP Colors"
-    colorTitle.TextColor3 = CurrentTheme.accent
-    colorTitle.TextSize = 16
+    colorTitle.TextColor3 = SharkTheme.accent
+    colorTitle.TextSize = 14
     colorTitle.Font = Enum.Font.GothamBold
     colorTitle.TextXAlignment = Enum.TextXAlignment.Left
     colorTitle.Parent = colorFrame
 
     local colorGrid = Instance.new("Frame")
-    colorGrid.Size = UDim2.new(1, -10, 1, -40)
-    colorGrid.Position = UDim2.new(0, 5, 0, 35)
+    colorGrid.Size = UDim2.new(1, -10, 1, -34)
+    colorGrid.Position = UDim2.new(0, 5, 0, 30)
     colorGrid.BackgroundTransparency = 1
     colorGrid.Parent = colorFrame
 
     local gridLayout = Instance.new("UIGridLayout")
-    gridLayout.CellSize = UDim2.new(0.25, -5, 0, 30)
-    gridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
+    gridLayout.CellSize = UDim2.new(0.2, -4, 0, 24)
+    gridLayout.CellPadding = UDim2.new(0, 4, 0, 4)
     gridLayout.Parent = colorGrid
 
     for _, colorData in ipairs(ColorPalette) do
@@ -1142,7 +1088,7 @@ local function createUI()
         colorBtn.BackgroundColor3 = colorData.color
         colorBtn.Text = colorData.name
         colorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        colorBtn.TextSize = 10
+        colorBtn.TextSize = 9
         colorBtn.Font = Enum.Font.GothamBold
         colorBtn.TextStrokeTransparency = 0.5
         colorBtn.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
@@ -1150,7 +1096,7 @@ local function createUI()
         colorBtn.Parent = colorGrid
 
         local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.CornerRadius = UDim.new(0, 5)
         btnCorner.Parent = colorBtn
 
         colorBtn.MouseButton1Click:Connect(function()
@@ -1173,114 +1119,31 @@ local function createUI()
         end)
     end
 
-    local themeFrame = Instance.new("Frame")
-    themeFrame.Size = UDim2.new(1, -10, 0, 120)
-    themeFrame.BackgroundColor3 = CurrentTheme.surface
-    themeFrame.BorderSizePixel = 0
-    themeFrame.Parent = configSection
-
-    local themeCorner = Instance.new("UICorner")
-    themeCorner.CornerRadius = UDim.new(0, 12)
-    themeCorner.Parent = themeFrame
-
-    local themeTitle = Instance.new("TextLabel")
-    themeTitle.Size = UDim2.new(1, -10, 0, 30)
-    themeTitle.Position = UDim2.new(0, 5, 0, 5)
-    themeTitle.BackgroundTransparency = 1
-    themeTitle.Text = "🎨 Theme Selector"
-    themeTitle.TextColor3 = CurrentTheme.accent
-    themeTitle.TextSize = 16
-    themeTitle.Font = Enum.Font.GothamBold
-    themeTitle.TextXAlignment = Enum.TextXAlignment.Left
-    themeTitle.Parent = themeFrame
-
-    local themeGrid = Instance.new("Frame")
-    themeGrid.Size = UDim2.new(1, -10, 1, -40)
-    themeGrid.Position = UDim2.new(0, 5, 0, 35)
-    themeGrid.BackgroundTransparency = 1
-    themeGrid.Parent = themeFrame
-
-    local themeGridLayout = Instance.new("UIGridLayout")
-    themeGridLayout.CellSize = UDim2.new(0.5, -5, 0, 35)
-    themeGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
-    themeGridLayout.Parent = themeGrid
-
-    for themeName, themeColors in pairs(Themes) do
-        local themeBtn = Instance.new("TextButton")
-        themeBtn.BackgroundColor3 = themeColors.primary
-        themeBtn.Text = themeName
-        themeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        themeBtn.TextSize = 12
-        themeBtn.Font = Enum.Font.GothamBold
-        themeBtn.BorderSizePixel = 0
-        themeBtn.Parent = themeGrid
-
-        local themeBtnCorner = Instance.new("UICorner")
-        themeBtnCorner.CornerRadius = UDim.new(0, 8)
-        themeBtnCorner.Parent = themeBtn
-
-        local themeBtnGradient = Instance.new("UIGradient")
-        themeBtnGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, themeColors.primary), ColorSequenceKeypoint.new(1, themeColors.secondary)}
-        themeBtnGradient.Rotation = 45
-        themeBtnGradient.Parent = themeBtn
-
-        themeBtn.MouseButton1Click:Connect(function()
-            Settings.Theme = themeName
-            CurrentTheme = Themes[themeName]
-            NotificationSystem:show("Tema: " .. themeName, "success")
-            header.BackgroundColor3 = CurrentTheme.primary
-            headerGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.secondary)}
-            mainFrame.BackgroundColor3 = CurrentTheme.background
-        end)
-    end
-
     local configButtons = Instance.new("Frame")
-    configButtons.Size = UDim2.new(1, -10, 0, 150)
+    configButtons.Size = UDim2.new(1, -10, 0, 140)
     configButtons.BackgroundTransparency = 1
     configButtons.Parent = configSection
 
     local btnLayout = Instance.new("UIListLayout")
-    btnLayout.Padding = UDim.new(0, 10)
+    btnLayout.Padding = UDim.new(0, 8)
     btnLayout.Parent = configButtons
 
     local function createConfigButton(text, icon, color, callback)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 40)
+        btn.Size = UDim2.new(1, 0, 0, 36)
         btn.BackgroundColor3 = color
         btn.Text = icon .. " " .. text
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextSize = 14
+        btn.TextSize = 13
         btn.Font = Enum.Font.GothamBold
         btn.BorderSizePixel = 0
         btn.Parent = configButtons
 
         local btnCorner = Instance.new("UICorner")
-        btnCorner.CornerRadius = UDim.new(0, 10)
+        btnCorner.CornerRadius = UDim.new(0, 8)
         btnCorner.Parent = btn
 
-        local btnStroke = Instance.new("UIStroke")
-        btnStroke.Color = color:Lerp(Color3.new(0, 0, 0), 0.2)
-        btnStroke.Thickness = 2
-        btnStroke.Transparency = 0.7
-        btnStroke.Parent = btn
-
         btn.MouseButton1Click:Connect(function()
-            local clickEffect = Instance.new("Frame")
-            clickEffect.Size = UDim2.new(0, 0, 0, 0)
-            clickEffect.Position = UDim2.new(0.5, 0, 0.5, 0)
-            clickEffect.AnchorPoint = Vector2.new(0.5, 0.5)
-            clickEffect.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            clickEffect.BackgroundTransparency = 0.5
-            clickEffect.BorderSizePixel = 0
-            clickEffect.Parent = btn
-
-            local effectCorner = Instance.new("UICorner")
-            effectCorner.CornerRadius = UDim.new(0, 10)
-            effectCorner.Parent = clickEffect
-
-            TweenService:Create(clickEffect, TweenInfo.new(0.5), {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1}):Play()
-            task.wait(0.5)
-            pcall(function() clickEffect:Destroy() end)
             callback()
         end)
         return btn
@@ -1288,7 +1151,7 @@ local function createUI()
 
     createConfigButton("Save Config", "💾", Color3.fromRGB(34, 139, 34), function()
         local success = saveConfig()
-        NotificationSystem:show(success and "Config salva!" or "Erro ao salvar", success and "success" or "error")
+        NotificationSystem:show(success and "Config salva!" or "Erro", success and "success" or "error")
     end)
 
     createConfigButton("Load Config", "📂", Color3.fromRGB(30, 144, 255), function()
@@ -1308,46 +1171,46 @@ local function createUI()
     end)
 
     local infoFrame = Instance.new("Frame")
-    infoFrame.Size = UDim2.new(1, -10, 0, 80)
-    infoFrame.BackgroundColor3 = CurrentTheme.surface
+    infoFrame.Size = UDim2.new(1, -10, 0, 70)
+    infoFrame.BackgroundColor3 = SharkTheme.surface
     infoFrame.BorderSizePixel = 0
     infoFrame.Parent = configSection
 
     local infoCorner = Instance.new("UICorner")
-    infoCorner.CornerRadius = UDim.new(0, 12)
+    infoCorner.CornerRadius = UDim.new(0, 10)
     infoCorner.Parent = infoFrame
 
     local infoText = Instance.new("TextLabel")
-    infoText.Size = UDim2.new(1, -20, 1, -20)
-    infoText.Position = UDim2.new(0, 10, 0, 10)
+    infoText.Size = UDim2.new(1, -16, 1, -16)
+    infoText.Position = UDim2.new(0, 8, 0, 8)
     infoText.BackgroundTransparency = 1
     infoText.Text = "SharkHUB Premium v2.0\nDeveloped with ❤️\n\nSupport: discord.gg/sharkhub"
-    infoText.TextColor3 = CurrentTheme.accent
-    infoText.TextSize = 12
+    infoText.TextColor3 = SharkTheme.accent
+    infoText.TextSize = 11
     infoText.Font = Enum.Font.Gotham
     infoText.TextWrapped = true
     infoText.Parent = infoFrame
 
     local minimizedFrame = Instance.new("Frame")
-    minimizedFrame.Size = UDim2.new(0, 60, 0, 60)
-    minimizedFrame.Position = UDim2.new(0, 20, 0.5, -30)
-    minimizedFrame.BackgroundColor3 = CurrentTheme.primary
+    minimizedFrame.Size = UDim2.new(0, 55, 0, 55)
+    minimizedFrame.Position = UDim2.new(0, 15, 0.5, -27)
+    minimizedFrame.BackgroundColor3 = SharkTheme.primary
     minimizedFrame.BorderSizePixel = 0
     minimizedFrame.Visible = false
     minimizedFrame.Parent = screenGui
 
     local miniCorner = Instance.new("UICorner")
-    miniCorner.CornerRadius = UDim.new(0, 15)
+    miniCorner.CornerRadius = UDim.new(0, 14)
     miniCorner.Parent = minimizedFrame
 
     local miniGradient = Instance.new("UIGradient")
-    miniGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, CurrentTheme.primary), ColorSequenceKeypoint.new(1, CurrentTheme.secondary)}
+    miniGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0, SharkTheme.primary), ColorSequenceKeypoint.new(1, SharkTheme.secondary)}
     miniGradient.Rotation = 135
     miniGradient.Parent = minimizedFrame
 
     local miniShadow = Instance.new("UIStroke")
     miniShadow.Color = Color3.fromRGB(0, 0, 0)
-    miniShadow.Thickness = 3
+    miniShadow.Thickness = 2
     miniShadow.Transparency = 0.7
     miniShadow.Parent = minimizedFrame
 
@@ -1356,7 +1219,7 @@ local function createUI()
     miniIcon.BackgroundTransparency = 1
     miniIcon.Text = "🦈"
     miniIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
-    miniIcon.TextSize = 30
+    miniIcon.TextSize = 28
     miniIcon.Font = Enum.Font.GothamBold
     miniIcon.Parent = minimizedFrame
 
@@ -1369,10 +1232,10 @@ local function createUI()
     task.spawn(function()
         while minimizedFrame and minimizedFrame.Parent do
             if minimizedFrame.Visible then
-                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 35}):Play()
+                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 32}):Play()
                 task.wait(1)
                 if not minimizedFrame or not minimizedFrame.Parent then break end
-                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 30}):Play()
+                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {TextSize = 28}):Play()
                 task.wait(1)
             else
                 task.wait(2)
@@ -1384,12 +1247,17 @@ local function createUI()
     setupDrag(minimizedFrame, minimizedFrame)
 
     minimizeBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), Position = minimizedFrame.Position}):Play()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0),
+            Position = minimizedFrame.Position
+        }):Play()
         TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
         task.wait(0.3)
         mainFrame.Visible = false
         minimizedFrame.Visible = true
-        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 60, 0, 60)}):Play()
+        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 55, 0, 55)
+        }):Play()
     end)
 
     miniButton.MouseButton1Click:Connect(function()
@@ -1397,15 +1265,21 @@ local function createUI()
         mainFrame.Visible = true
         mainFrame.Size = UDim2.new(0, 0, 0, 0)
         mainFrame.Position = minimizedFrame.Position
-        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 10}):Play()
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600), Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 8}):Play()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, mobile and 260 or 400, 0, mobile and 360 or 480),
+            Position = UDim2.new(0.5, 0, 0.5, 0)
+        }):Play()
     end)
 
     closeBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0)
+        }):Play()
         TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
         task.wait(0.3)
         cleanup()
+        pcall(function() screenGui:Destroy() end)
         pcall(function() blur:Destroy() end)
     end)
 
@@ -1450,6 +1324,6 @@ task.spawn(function()
     end)
 end)
 
-print("🦈 SharkHUB Premium v2.0 - Interface Ultra Moderna")
-print("💎 Desenvolvido com animações fluidas e design responsivo")
+print("🦈 SharkHUB Premium v2.0 - UI Otimizada")
+print("💎 Interface clean com tema tubarão")
 print("✅ Script carregado! A UI deve aparecer em instantes.")
