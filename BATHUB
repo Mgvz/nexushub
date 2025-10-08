@@ -1,8 +1,8 @@
--- SharkHUB Premium V2 - UI Compacta e Moderna
+-- SharkHUB Premium V2 - UI Mini com Desync Otimizado
 -- COPIE E EXECUTE NO SEU EXECUTOR
 
 if not game:IsLoaded() then game.Loaded:Wait() end
-task.wait(1)
+task.wait(0.5)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -82,37 +82,37 @@ local NotificationSystem = {
         if not gui then self.showing = false return end
         
         local notif = Instance.new("Frame")
-        notif.Size = UDim2.new(0, 200, 0, 40)
-        notif.Position = UDim2.new(1, 10, 0, 70)
+        notif.Size = UDim2.new(0, 180, 0, 35)
+        notif.Position = UDim2.new(1, 10, 0, 60)
         notif.BackgroundColor3 = data.type == "success" and Color3.fromRGB(46, 204, 113) 
             or data.type == "error" and Color3.fromRGB(231, 76, 60) 
             or Color3.fromRGB(52, 152, 219)
         notif.BorderSizePixel = 0
         notif.Parent = gui
         
-        Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 6)
         
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, -12, 1, 0)
-        label.Position = UDim2.new(0, 6, 0, 0)
+        label.Size = UDim2.new(1, -10, 1, 0)
+        label.Position = UDim2.new(0, 5, 0, 0)
         label.BackgroundTransparency = 1
         label.Text = data.text
         label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.TextSize = 12
+        label.TextSize = 11
         label.Font = Enum.Font.GothamSemibold
         label.TextXAlignment = Enum.TextXAlignment.Left
         label.TextWrapped = true
         label.Parent = notif
         
-        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Position = UDim2.new(1, -210, 0, 70)
+        TweenService:Create(notif, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
+            Position = UDim2.new(1, -190, 0, 60)
         }):Play()
         
-        task.wait(2.5)
-        TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Position = UDim2.new(1, 10, 0, 70)
+        task.wait(2)
+        TweenService:Create(notif, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 10, 0, 60)
         }):Play()
-        task.wait(0.3)
+        task.wait(0.25)
         pcall(function() notif:Destroy() end)
         self:processQueue()
     end
@@ -128,8 +128,8 @@ local Settings = {
 }
 
 local Theme = {
-    bg = Color3.fromRGB(20, 25, 30),
-    surface = Color3.fromRGB(30, 35, 40),
+    bg = Color3.fromRGB(18, 22, 26),
+    surface = Color3.fromRGB(28, 32, 36),
     primary = Color3.fromRGB(52, 152, 219),
     accent = Color3.fromRGB(46, 204, 113),
     text = Color3.fromRGB(236, 240, 241)
@@ -270,53 +270,119 @@ local function setupESPBetter()
     end
 end
 
+-- ANTI-HIT OTIMIZADO E MAIS RÁPIDO
 local function setupAntiHit()
     ConnectionManager:remove("AntiHit")
     StateManager:set("antiHit", Settings.AntiHit.enabled)
     
     if Settings.AntiHit.enabled then
         task.spawn(function()
-            pcall(function()
-                local backpack = LocalPlayer:WaitForChild("Backpack", 5)
-                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-                local humanoid = character:WaitForChild("Humanoid", 5)
-                
+            local success = pcall(function()
                 NotificationSystem:show("Ativando Anti-Hit...", "info")
                 
-                local packages = ReplicatedStorage:WaitForChild("Packages", 5)
-                local netFolder = packages:WaitForChild("Net", 5)
-                local useItemRemote = netFolder:WaitForChild("RE/UseItem", 5)
-                local teleportRemote = netFolder:WaitForChild("RE/QuantumCloner/OnTeleport", 5)
+                -- Cache dos serviços para velocidade
+                local backpack = LocalPlayer.Backpack
+                local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+                local humanoid = character:FindFirstChild("Humanoid")
+                
+                if not (backpack and humanoid) then 
+                    NotificationSystem:show("Erro: Personagem inválido", "error")
+                    return 
+                end
+                
+                -- Busca rápida dos remotos (sem WaitForChild longo)
+                local packages = ReplicatedStorage:FindFirstChild("Packages")
+                if not packages then 
+                    NotificationSystem:show("Erro: Packages não encontrado", "error")
+                    return 
+                end
+                
+                local netFolder = packages:FindFirstChild("Net")
+                if not netFolder then 
+                    NotificationSystem:show("Erro: Net não encontrado", "error")
+                    return 
+                end
+                
+                local useItemRemote = netFolder:FindFirstChild("RE/UseItem") or netFolder:FindFirstChild("UseItem")
+                local teleportRemote = netFolder:FindFirstChild("RE/QuantumCloner/OnTeleport")
+                
+                if not useItemRemote then
+                    -- Busca alternativa
+                    for _, remote in ipairs(netFolder:GetDescendants()) do
+                        if remote.Name:find("UseItem") then
+                            useItemRemote = remote
+                            break
+                        end
+                    end
+                end
+                
+                if not teleportRemote then
+                    -- Busca alternativa
+                    for _, remote in ipairs(netFolder:GetDescendants()) do
+                        if remote.Name:find("Teleport") or remote.Name:find("QuantumCloner") then
+                            teleportRemote = remote
+                            break
+                        end
+                    end
+                end
+                
+                if not (useItemRemote and teleportRemote) then
+                    NotificationSystem:show("Erro: Remotos não encontrados", "error")
+                    return
+                end
 
+                -- Busca rápida da tool
                 local tool = nil
                 for _, name in ipairs({"Quantum Cloner", "Brainrot", "brainrot"}) do
                     tool = backpack:FindFirstChild(name) or character:FindFirstChild(name)
                     if tool then break end
                 end
                 
+                -- Se não encontrou, pega a primeira tool disponível
                 if not tool then
-                    for _, item in ipairs(backpack:GetChildren()) do
-                        if item:IsA("Tool") then tool = item break end
-                    end
+                    tool = backpack:FindFirstChildOfClass("Tool")
                 end
                 
+                -- Equipar tool rapidamente
                 if tool and tool.Parent == backpack then
                     humanoid:EquipTool(tool)
-                    task.wait(0.5)
+                    task.wait(0.1) -- Reduzido de 0.5 para 0.1
                 end
 
-                if setfflag then setfflag("WorldStepMax", "-9999999999") end
-                task.wait(0.2)
+                -- DESYNC RÁPIDO - Configuração otimizada
+                if setfflag then 
+                    setfflag("WorldStepMax", "-99999999")
+                    setfflag("DFIntTaskSchedulerTargetFps", "9999")
+                end
+                
+                -- Execução rápida sem delays longos
                 useItemRemote:FireServer()
-                task.wait(1)
+                task.wait(0.3) -- Reduzido de 1 para 0.3
                 teleportRemote:FireServer()
-                task.wait(2)
-                if setfflag then setfflag("WorldStepMax", "-1") end
+                task.wait(0.5) -- Reduzido de 2 para 0.5
+                
+                -- Restaurar flags
+                if setfflag then 
+                    setfflag("WorldStepMax", "-1")
+                    setfflag("DFIntTaskSchedulerTargetFps", "60")
+                end
+                
                 NotificationSystem:show("Anti-Hit ativo!", "success")
             end)
+            
+            if not success then
+                NotificationSystem:show("Erro no Anti-Hit", "error")
+                Settings.AntiHit.enabled = false
+                StateManager:set("antiHit", false)
+            end
         end)
     else
-        pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
+        pcall(function() 
+            if setfflag then 
+                setfflag("WorldStepMax", "-1")
+                setfflag("DFIntTaskSchedulerTargetFps", "60")
+            end 
+        end)
         NotificationSystem:show("Anti-Hit desativado", "info")
     end
 end
@@ -445,45 +511,50 @@ local function cleanup()
     StateManager:set("floatV1", false)
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
-    pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
+    pcall(function() 
+        if setfflag then 
+            setfflag("WorldStepMax", "-1")
+            setfflag("DFIntTaskSchedulerTargetFps", "60")
+        end 
+    end)
 end
 
 local function createToggle(parent, icon, text, callback, state)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 36)
+    btn.Size = UDim2.new(1, 0, 0, 32)
     btn.BackgroundColor3 = Theme.surface
     btn.BorderSizePixel = 0
     btn.Text = ""
     btn.Parent = parent
     
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
     
     local ic = Instance.new("TextLabel")
-    ic.Size = UDim2.new(0, 28, 0, 28)
-    ic.Position = UDim2.new(0, 6, 0.5, 0)
+    ic.Size = UDim2.new(0, 24, 0, 24)
+    ic.Position = UDim2.new(0, 5, 0.5, 0)
     ic.AnchorPoint = Vector2.new(0, 0.5)
     ic.BackgroundColor3 = Theme.primary
     ic.Text = icon
     ic.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ic.TextSize = 16
+    ic.TextSize = 14
     ic.Font = Enum.Font.GothamBold
     ic.Parent = btn
-    Instance.new("UICorner", ic).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", ic).CornerRadius = UDim.new(0, 5)
     
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(0.6, 0, 1, 0)
-    lbl.Position = UDim2.new(0, 40, 0, 0)
+    lbl.Position = UDim2.new(0, 34, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Theme.text
-    lbl.TextSize = 12
+    lbl.TextSize = 11
     lbl.Font = Enum.Font.GothamSemibold
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = btn
     
     local sw = Instance.new("Frame")
-    sw.Size = UDim2.new(0, 40, 0, 20)
-    sw.Position = UDim2.new(1, -46, 0.5, 0)
+    sw.Size = UDim2.new(0, 36, 0, 18)
+    sw.Position = UDim2.new(1, -40, 0.5, 0)
     sw.AnchorPoint = Vector2.new(0, 0.5)
     sw.BackgroundColor3 = state and Theme.accent or Color3.fromRGB(60, 65, 70)
     sw.BorderSizePixel = 0
@@ -491,8 +562,8 @@ local function createToggle(parent, icon, text, callback, state)
     Instance.new("UICorner", sw).CornerRadius = UDim.new(1, 0)
     
     local ball = Instance.new("Frame")
-    ball.Size = UDim2.new(0, 16, 0, 16)
-    ball.Position = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+    ball.Size = UDim2.new(0, 14, 0, 14)
+    ball.Position = state and UDim2.new(1, -16, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
     ball.AnchorPoint = Vector2.new(0, 0.5)
     ball.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     ball.BorderSizePixel = 0
@@ -503,56 +574,56 @@ local function createToggle(parent, icon, text, callback, state)
     btn.MouseButton1Click:Connect(function()
         enabled = not enabled
         TweenService:Create(sw, TweenInfo.new(0.2), {BackgroundColor3 = enabled and Theme.accent or Color3.fromRGB(60, 65, 70)}):Play()
-        TweenService:Create(ball, TweenInfo.new(0.2), {Position = enabled and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
+        TweenService:Create(ball, TweenInfo.new(0.2), {Position = enabled and UDim2.new(1, -16, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
         if callback then callback(enabled) end
     end)
 end
 
 local function createSlider(parent, icon, text, min, max, default, callback, current)
     local fr = Instance.new("Frame")
-    fr.Size = UDim2.new(1, 0, 0, 60)
+    fr.Size = UDim2.new(1, 0, 0, 52)
     fr.BackgroundColor3 = Theme.surface
     fr.BorderSizePixel = 0
     fr.Parent = parent
-    Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", fr).CornerRadius = UDim.new(0, 6)
     
     local ic = Instance.new("TextLabel")
-    ic.Size = UDim2.new(0, 24, 0, 24)
-    ic.Position = UDim2.new(0, 6, 0, 6)
+    ic.Size = UDim2.new(0, 20, 0, 20)
+    ic.Position = UDim2.new(0, 5, 0, 5)
     ic.BackgroundColor3 = Theme.primary
     ic.Text = icon
     ic.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ic.TextSize = 14
+    ic.TextSize = 12
     ic.Font = Enum.Font.GothamBold
     ic.Parent = fr
-    Instance.new("UICorner", ic).CornerRadius = UDim.new(0, 5)
+    Instance.new("UICorner", ic).CornerRadius = UDim.new(0, 4)
     
     local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0.5, 0, 0, 30)
-    lbl.Position = UDim2.new(0, 36, 0, 0)
+    lbl.Size = UDim2.new(0.5, 0, 0, 26)
+    lbl.Position = UDim2.new(0, 30, 0, 0)
     lbl.BackgroundTransparency = 1
     lbl.Text = text
     lbl.TextColor3 = Theme.text
-    lbl.TextSize = 11
+    lbl.TextSize = 10
     lbl.Font = Enum.Font.GothamSemibold
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = fr
     
     local val = current or default
     local valLbl = Instance.new("TextLabel")
-    valLbl.Size = UDim2.new(0, 40, 0, 30)
-    valLbl.Position = UDim2.new(1, -46, 0, 0)
+    valLbl.Size = UDim2.new(0, 35, 0, 26)
+    valLbl.Position = UDim2.new(1, -40, 0, 0)
     valLbl.BackgroundTransparency = 1
     valLbl.Text = tostring(val)
     valLbl.TextColor3 = Theme.accent
-    valLbl.TextSize = 14
+    valLbl.TextSize = 12
     valLbl.Font = Enum.Font.GothamBold
     valLbl.TextXAlignment = Enum.TextXAlignment.Right
     valLbl.Parent = fr
     
     local track = Instance.new("Frame")
-    track.Size = UDim2.new(1, -12, 0, 6)
-    track.Position = UDim2.new(0, 6, 1, -12)
+    track.Size = UDim2.new(1, -10, 0, 5)
+    track.Position = UDim2.new(0, 5, 1, -10)
     track.BackgroundColor3 = Color3.fromRGB(40, 45, 50)
     track.BorderSizePixel = 0
     track.Parent = fr
@@ -566,8 +637,8 @@ local function createSlider(parent, icon, text, min, max, default, callback, cur
     Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
     
     local thumb = Instance.new("Frame")
-    thumb.Size = UDim2.new(0, 14, 0, 14)
-    thumb.Position = UDim2.new((val - min) / (max - min), -7, 0.5, 0)
+    thumb.Size = UDim2.new(0, 12, 0, 12)
+    thumb.Position = UDim2.new((val - min) / (max - min), -6, 0.5, 0)
     thumb.AnchorPoint = Vector2.new(0, 0.5)
     thumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     thumb.BorderSizePixel = 0
@@ -575,8 +646,8 @@ local function createSlider(parent, icon, text, min, max, default, callback, cur
     Instance.new("UICorner", thumb).CornerRadius = UDim.new(1, 0)
     
     local sliderBtn = Instance.new("TextButton")
-    sliderBtn.Size = UDim2.new(1, 0, 1, 10)
-    sliderBtn.Position = UDim2.new(0, 0, 0, -5)
+    sliderBtn.Size = UDim2.new(1, 0, 1, 8)
+    sliderBtn.Position = UDim2.new(0, 0, 0, -4)
     sliderBtn.BackgroundTransparency = 1
     sliderBtn.Text = ""
     sliderBtn.Parent = track
@@ -586,7 +657,7 @@ local function createSlider(parent, icon, text, min, max, default, callback, cur
         local rel = math.clamp((pos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
         val = math.floor(min + (max - min) * rel)
         fill.Size = UDim2.new(rel, 0, 1, 0)
-        thumb.Position = UDim2.new(rel, -7, 0.5, 0)
+        thumb.Position = UDim2.new(rel, -6, 0.5, 0)
         valLbl.Text = tostring(val)
         if callback then callback(val) end
     end
@@ -643,15 +714,15 @@ local function createUI()
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent = PlayerGui
     
-    -- TAMANHO SUPER COMPACTO: 320x420
+    -- UI AINDA MENOR: 280x380
     local main = Instance.new("Frame")
-    main.Size = UDim2.new(0, 320, 0, 420)
+    main.Size = UDim2.new(0, 280, 0, 380)
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.BackgroundColor3 = Theme.bg
     main.BorderSizePixel = 0
     main.Parent = gui
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
     
     local shadow = Instance.new("UIStroke", main)
     shadow.Color = Color3.fromRGB(0, 0, 0)
@@ -659,72 +730,72 @@ local function createUI()
     shadow.Transparency = 0.8
     
     main.Size = UDim2.new(0, 0, 0, 0)
-    TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 320, 0, 420)}):Play()
+    TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 280, 0, 380)}):Play()
     
     -- Header compacto
     local header = Instance.new("Frame")
-    header.Size = UDim2.new(1, 0, 0, 45)
+    header.Size = UDim2.new(1, 0, 0, 38)
     header.BackgroundColor3 = Theme.primary
     header.BorderSizePixel = 0
     header.Parent = main
-    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
     
     local headerFix = Instance.new("Frame")
-    headerFix.Size = UDim2.new(1, 0, 0, 12)
-    headerFix.Position = UDim2.new(0, 0, 1, -12)
+    headerFix.Size = UDim2.new(1, 0, 0, 10)
+    headerFix.Position = UDim2.new(0, 0, 1, -10)
     headerFix.BackgroundColor3 = Theme.primary
     headerFix.BorderSizePixel = 0
     headerFix.Parent = header
     
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1, -60, 1, 0)
-    title.Position = UDim2.new(0, 12, 0, 0)
+    title.Size = UDim2.new(1, -55, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
     title.Text = "🦈 SHARK HUB"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 16
+    title.TextSize = 14
     title.Font = Enum.Font.GothamBold
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = header
     
     local close = Instance.new("TextButton")
-    close.Size = UDim2.new(0, 28, 0, 28)
-    close.Position = UDim2.new(1, -36, 0.5, 0)
+    close.Size = UDim2.new(0, 24, 0, 24)
+    close.Position = UDim2.new(1, -30, 0.5, 0)
     close.AnchorPoint = Vector2.new(0, 0.5)
     close.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
     close.Text = "×"
     close.TextColor3 = Color3.fromRGB(255, 255, 255)
-    close.TextSize = 20
+    close.TextSize = 18
     close.Font = Enum.Font.GothamBold
     close.BorderSizePixel = 0
     close.Parent = header
-    Instance.new("UICorner", close).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", close).CornerRadius = UDim.new(0, 5)
     
     -- Tabs compactas
     local tabs = Instance.new("Frame")
-    tabs.Size = UDim2.new(1, -16, 0, 32)
-    tabs.Position = UDim2.new(0, 8, 0, 53)
+    tabs.Size = UDim2.new(1, -12, 0, 28)
+    tabs.Position = UDim2.new(0, 6, 0, 44)
     tabs.BackgroundTransparency = 1
     tabs.Parent = main
     
     local tabLayout = Instance.new("UIListLayout", tabs)
     tabLayout.FillDirection = Enum.FillDirection.Horizontal
-    tabLayout.Padding = UDim.new(0, 4)
+    tabLayout.Padding = UDim.new(0, 3)
     
     local sections = {}
     local tabButtons = {}
     
     local function createTab(name, icon)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0.333, -3, 1, 0)
+        btn.Size = UDim2.new(0.333, -2, 1, 0)
         btn.BackgroundColor3 = Theme.surface
         btn.Text = icon .. " " .. name
         btn.TextColor3 = Theme.text
-        btn.TextSize = 11
+        btn.TextSize = 10
         btn.Font = Enum.Font.GothamBold
         btn.BorderSizePixel = 0
         btn.Parent = tabs
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
         
         local stroke = Instance.new("UIStroke", btn)
         stroke.Color = Theme.primary
@@ -739,10 +810,10 @@ local function createUI()
     local visualTab = createTab("Visual", "👁")
     local configTab = createTab("Config", "⚙")
     
-    -- Content
+    -- Content com SCROLL
     local content = Instance.new("Frame")
-    content.Size = UDim2.new(1, -16, 1, -101)
-    content.Position = UDim2.new(0, 8, 0, 93)
+    content.Size = UDim2.new(1, -12, 1, -84)
+    content.Position = UDim2.new(0, 6, 0, 78)
     content.BackgroundTransparency = 1
     content.Parent = main
     
@@ -753,13 +824,16 @@ local function createUI()
         scroll.BorderSizePixel = 0
         scroll.ScrollBarThickness = 3
         scroll.ScrollBarImageColor3 = Theme.primary
+        scroll.ScrollBarImageTransparency = 0.3
         scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
         scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        scroll.ScrollingDirection = Enum.ScrollingDirection.Y
         scroll.Visible = false
         scroll.Parent = content
         
         local layout = Instance.new("UIListLayout", scroll)
-        layout.Padding = UDim.new(0, 6)
+        layout.Padding = UDim.new(0, 5)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
         
         sections[name] = scroll
         return scroll
@@ -846,7 +920,7 @@ local function createUI()
         setupFloatV1()
     end, Settings.FloatV1.enabled)
     
-    createToggle(playerSection, "🛡️", "Anti-Hit", function(enabled)
+    createToggle(playerSection, "🛡️", "Anti-Hit (Desync)", function(enabled)
         Settings.AntiHit.enabled = enabled
         setupAntiHit()
     end, Settings.AntiHit.enabled)
@@ -865,15 +939,15 @@ local function createUI()
     -- Config Section
     local function createBtn(text, icon, color, callback)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 36)
+        btn.Size = UDim2.new(1, 0, 0, 32)
         btn.BackgroundColor3 = color
         btn.Text = icon .. " " .. text
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextSize = 12
+        btn.TextSize = 11
         btn.Font = Enum.Font.GothamBold
         btn.BorderSizePixel = 0
         btn.Parent = configSection
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
         btn.MouseButton1Click:Connect(callback)
     end
     
@@ -895,19 +969,19 @@ local function createUI()
     
     -- Minimized
     local mini = Instance.new("Frame")
-    mini.Size = UDim2.new(0, 50, 0, 50)
-    mini.Position = UDim2.new(0, 12, 0.5, -25)
+    mini.Size = UDim2.new(0, 45, 0, 45)
+    mini.Position = UDim2.new(0, 10, 0.5, -22)
     mini.BackgroundColor3 = Theme.primary
     mini.BorderSizePixel = 0
     mini.Visible = false
     mini.Parent = gui
-    Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", mini).CornerRadius = UDim.new(0, 10)
     
     local miniIcon = Instance.new("TextLabel")
     miniIcon.Size = UDim2.new(1, 0, 1, 0)
     miniIcon.BackgroundTransparency = 1
     miniIcon.Text = "🦈"
-    miniIcon.TextSize = 26
+    miniIcon.TextSize = 24
     miniIcon.Font = Enum.Font.GothamBold
     miniIcon.Parent = mini
     
@@ -921,16 +995,16 @@ local function createUI()
     setupDrag(mini, mini)
     
     local minimize = Instance.new("TextButton")
-    minimize.Size = UDim2.new(0, 28, 0, 28)
-    minimize.Position = UDim2.new(1, -68, 0.5, 0)
+    minimize.Size = UDim2.new(0, 24, 0, 24)
+    minimize.Position = UDim2.new(1, -58, 0.5, 0)
     minimize.AnchorPoint = Vector2.new(0, 0.5)
     minimize.BackgroundColor3 = Color3.fromRGB(241, 196, 15)
     minimize.Text = "—"
-    minimize.TextSize = 16
+    minimize.TextSize = 14
     minimize.Font = Enum.Font.GothamBold
     minimize.BorderSizePixel = 0
     minimize.Parent = header
-    Instance.new("UICorner", minimize).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", minimize).CornerRadius = UDim.new(0, 5)
     
     minimize.MouseButton1Click:Connect(function()
         TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
@@ -945,7 +1019,7 @@ local function createUI()
         mini.Visible = false
         main.Visible = true
         TweenService:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, 320, 0, 420)
+            Size = UDim2.new(0, 280, 0, 380)
         }):Play()
     end)
     
@@ -969,7 +1043,12 @@ LocalPlayer.CharacterAdded:Connect(function()
     if Settings.AntiHit.enabled then
         Settings.AntiHit.enabled = false
         StateManager:set("antiHit", false)
-        pcall(function() if setfflag then setfflag("WorldStepMax", "-1") end end)
+        pcall(function() 
+            if setfflag then 
+                setfflag("WorldStepMax", "-1")
+                setfflag("DFIntTaskSchedulerTargetFps", "60")
+            end 
+        end)
         NotificationSystem:show("Anti-Hit desativado", "info")
     end
 end)
@@ -981,5 +1060,5 @@ task.spawn(function()
 end)
 
 print("🦈 SharkHUB Premium V2")
-print("✅ UI Compacta Moderna")
-print("📦 320x420 pixels")
+print("⚡ Desync Otimizado")
+print("📦 280x380 pixels com scroll")
