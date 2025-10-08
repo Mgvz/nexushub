@@ -1,4 +1,4 @@
--- SharkHUB Script - Versão Premium com UI Renovada
+-- SharkHUB Premium V2 - Interface Ultra Moderna
 -- Serviços principais
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -6,17 +6,18 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
 local Workspace = workspace
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Detectar se é dispositivo móvel
+-- Detectar dispositivo
 local function isMobile()
     return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 end
 
--- Gerenciador de Conexões - Evita memory leaks
+-- Gerenciador de Conexões
 local ConnectionManager = {
     connections = {},
     add = function(self, name, connection)
@@ -39,7 +40,7 @@ local ConnectionManager = {
     end
 }
 
--- Gerenciador de Estado - Substitui variáveis globais
+-- Gerenciador de Estado
 local StateManager = {
     floatV1 = false,
     floatV2 = false,
@@ -53,7 +54,7 @@ local StateManager = {
     end
 }
 
--- Sistema de Cache - Otimiza FindFirstChild repetitivos
+-- Sistema de Cache
 local Cache = {
     instances = {},
     get = function(self, parent, name)
@@ -69,6 +70,76 @@ local Cache = {
     end
 }
 
+-- Sistema de Notificações
+local NotificationSystem = {
+    queue = {},
+    showing = false,
+    
+    show = function(self, text, type)
+        table.insert(self.queue, {text = text, type = type or "info"})
+        if not self.showing then
+            self:processQueue()
+        end
+    end,
+    
+    processQueue = function(self)
+        if #self.queue == 0 then
+            self.showing = false
+            return
+        end
+        
+        self.showing = true
+        local data = table.remove(self.queue, 1)
+        
+        -- Criar notificação
+        local notif = Instance.new("Frame")
+        notif.Size = UDim2.new(0, 300, 0, 60)
+        notif.Position = UDim2.new(1, 20, 0, 100)
+        notif.BackgroundColor3 = data.type == "success" and Color3.fromRGB(34, 139, 34) 
+            or data.type == "error" and Color3.fromRGB(220, 20, 60) 
+            or Color3.fromRGB(0, 162, 232)
+        notif.BorderSizePixel = 0
+        notif.Parent = PlayerGui:FindFirstChild("SharkHUBScriptGUI")
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 12)
+        corner.Parent = notif
+        
+        local shadow = Instance.new("UIStroke")
+        shadow.Color = Color3.fromRGB(0, 0, 0)
+        shadow.Thickness = 4
+        shadow.Transparency = 0.8
+        shadow.Parent = notif
+        
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -20, 1, 0)
+        label.Position = UDim2.new(0, 10, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = data.text
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.TextSize = 16
+        label.Font = Enum.Font.GothamBold
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = notif
+        
+        -- Animação
+        TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+            Position = UDim2.new(1, -320, 0, 100)
+        }):Play()
+        
+        task.wait(3)
+        
+        TweenService:Create(notif, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 20, 0, 100)
+        }):Play()
+        
+        task.wait(0.5)
+        notif:Destroy()
+        
+        self:processQueue()
+    end
+}
+
 -- Configurações principais
 local Settings = {
     Speed = {enabled = false, value = 50},
@@ -77,10 +148,45 @@ local Settings = {
     FloatV2 = {enabled = false}, 
     ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
     ESPBetter = {enabled = false},
-    AntiHit = {enabled = false}
+    AntiHit = {enabled = false},
+    Theme = "Ocean" -- Novo sistema de temas
 }
 
--- Paleta de cores para ESP - Tema oceânico
+-- Temas disponíveis
+local Themes = {
+    Ocean = {
+        primary = Color3.fromRGB(0, 162, 232),
+        secondary = Color3.fromRGB(0, 100, 148),
+        accent = Color3.fromRGB(0, 255, 255),
+        background = Color3.fromRGB(10, 20, 35),
+        surface = Color3.fromRGB(15, 30, 45)
+    },
+    Neon = {
+        primary = Color3.fromRGB(255, 0, 128),
+        secondary = Color3.fromRGB(128, 0, 255),
+        accent = Color3.fromRGB(0, 255, 255),
+        background = Color3.fromRGB(10, 10, 20),
+        surface = Color3.fromRGB(20, 20, 30)
+    },
+    Forest = {
+        primary = Color3.fromRGB(34, 139, 34),
+        secondary = Color3.fromRGB(85, 107, 47),
+        accent = Color3.fromRGB(144, 238, 144),
+        background = Color3.fromRGB(20, 25, 20),
+        surface = Color3.fromRGB(30, 35, 30)
+    },
+    Sunset = {
+        primary = Color3.fromRGB(255, 94, 77),
+        secondary = Color3.fromRGB(255, 154, 0),
+        accent = Color3.fromRGB(255, 206, 84),
+        background = Color3.fromRGB(25, 15, 20),
+        surface = Color3.fromRGB(35, 25, 30)
+    }
+}
+
+local CurrentTheme = Themes[Settings.Theme]
+
+-- Paleta de cores ESP
 local ColorPalette = {
     {name = "Ocean", color = Color3.fromRGB(0, 162, 232)},
     {name = "Deep", color = Color3.fromRGB(0, 100, 148)},
@@ -96,35 +202,22 @@ local ColorPalette = {
     {name = "Reef", color = Color3.fromRGB(127, 255, 212)}
 }
 
--- Configurações padrão para reset
-local DefaultSettings = {
-    Speed = {enabled = false, value = 50},
-    Jump = {enabled = false, value = 90},
-    FloatV1 = {enabled = false},
-    FloatV2 = {enabled = false},
-    ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232)},
-    ESPBetter = {enabled = false},
-    AntiHit = {enabled = false}
-}
-
 local CONFIG_FILE_NAME = "SharkHUB_Config.json"
 
--- Função otimizada para parsear valores monetários
-local function parseValue(text)
-    if not text or text == "" then return 0 end
-    
-    local multipliers = {Q = 1e15, T = 1e12, B = 1e9, M = 1e6, K = 1e3}
-    local number, suffix = text:match("([%d%.]+)([QTBMK]?)")
-    number = tonumber(number) or 0
-    
-    return multipliers[suffix] and number * multipliers[suffix] or number
-end
-
--- Variáveis do ESP Better
+-- Variáveis do ESP
 local currentESP = nil
 local highlights = {}
 
--- ESP Better - Otimizado
+-- Função para parsear valores
+local function parseValue(text)
+    if not text or text == "" then return 0 end
+    local multipliers = {Q = 1e15, T = 1e12, B = 1e9, M = 1e6, K = 1e3}
+    local number, suffix = text:match("([%d%.]+)([QTBMK]?)")
+    number = tonumber(number) or 0
+    return multipliers[suffix] and number * multipliers[suffix] or number
+end
+
+-- ESP Better
 local function setupESPBetter()
     ConnectionManager:remove("ESPBetter")
     StateManager:set("bestESP", Settings.ESPBetter.enabled)
@@ -187,7 +280,6 @@ local function setupESPBetter()
                 end
             end
 
-            -- Limpar ESP anterior
             if currentESP then 
                 currentESP:Destroy() 
                 currentESP = nil 
@@ -197,7 +289,6 @@ local function setupESPBetter()
             end
             highlights = {}
 
-            -- Criar novo ESP se encontrou melhor animal
             if bestAnimal then
                 local billboard = Instance.new("BillboardGui")
                 billboard.Name = "BestAnimalESP"
@@ -208,7 +299,7 @@ local function setupESPBetter()
                 
                 local back = Instance.new("Frame")
                 back.BackgroundTransparency = 0.18
-                back.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
+                back.BackgroundColor3 = CurrentTheme.surface
                 back.Size = UDim2.new(1, 0, 1, 0)
                 back.Position = UDim2.new(0.5, 0, 0.5, 0)
                 back.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -222,7 +313,7 @@ local function setupESPBetter()
                 textLabel.Size = UDim2.new(0.9, 0, 0.9, 0)
                 textLabel.Position = UDim2.new(0.05, 0, 0.05, 0)
                 textLabel.BackgroundTransparency = 1
-                textLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
+                textLabel.TextColor3 = CurrentTheme.accent
                 textLabel.TextScaled = true
                 textLabel.Font = Enum.Font.GothamBold
                 textLabel.Text = string.format("%s | %s | %s", bestAnimal.nome, bestAnimal.raridade, bestAnimal.porSegundo)
@@ -231,14 +322,13 @@ local function setupESPBetter()
                 
                 currentESP = billboard
 
-                -- Destacar decorações
                 local decorations = bestBase and Cache:get(bestBase, "Decorations")
                 if decorations then
                     for _, d in ipairs(decorations:GetDescendants()) do
                         local hl = Instance.new("Highlight")
                         hl.Name = "ESP_Deco"
-                        hl.FillColor = Color3.fromRGB(0, 162, 232)
-                        hl.OutlineColor = Color3.fromRGB(0, 100, 148)
+                        hl.FillColor = CurrentTheme.primary
+                        hl.OutlineColor = CurrentTheme.secondary
                         hl.FillTransparency = 0
                         hl.Parent = d
                         highlights[d] = hl
@@ -247,7 +337,6 @@ local function setupESPBetter()
             end
         end))
     else
-        -- Limpar ESP quando desabilitado
         if currentESP then
             currentESP:Destroy()
             currentESP = nil
@@ -259,7 +348,7 @@ local function setupESPBetter()
     end
 end
 
--- Sistema Anti-Hit (Desync)
+-- Anti-Hit
 local function setupAntiHit()
     ConnectionManager:remove("AntiHit")
     StateManager:set("antiHit", Settings.AntiHit.enabled)
@@ -271,18 +360,17 @@ local function setupAntiHit()
                 local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
                 local humanoid = character:WaitForChild("Humanoid")
                 
-                print("🛡️ Iniciando Anti-Hit (Desync)...")
+                NotificationSystem:show("Iniciando Anti-Hit...", "info")
                 
-                -- Verificar ReplicatedStorage e remotos
                 local packages = ReplicatedStorage:WaitForChild("Packages", 5)
                 if not packages then 
-                    warn("❌ Packages não encontrado no ReplicatedStorage")
+                    NotificationSystem:show("Packages não encontrado", "error")
                     return false
                 end
                 
                 local netFolder = packages:WaitForChild("Net", 5)
                 if not netFolder then 
-                    warn("❌ Net folder não encontrado")
+                    NotificationSystem:show("Net folder não encontrado", "error")
                     return false
                 end
                 
@@ -290,92 +378,70 @@ local function setupAntiHit()
                 local teleportRemote = netFolder:WaitForChild("RE/QuantumCloner/OnTeleport", 5)
                 
                 if not useItemRemote or not teleportRemote then
-                    warn("❌ Remotos necessários não encontrados")
+                    NotificationSystem:show("Remotos não encontrados", "error")
                     return false
                 end
 
-                -- Procurar pela ferramenta
                 local toolNames = {"Quantum Cloner", "Brainrot", "brainrot"}
                 local tool = nil
                 
                 for _, toolName in ipairs(toolNames) do
                     tool = backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-                    if tool then
-                        print("🔧 Ferramenta Anti-Hit encontrada: " .. tool.Name)
-                        break
-                    end
+                    if tool then break end
                 end
                 
-                -- Se não encontrou, procurar qualquer Tool disponível
                 if not tool then
                     for _, item in ipairs(backpack:GetChildren()) do
                         if item:IsA("Tool") then
                             tool = item
-                            print("🔧 Usando ferramenta alternativa: " .. tool.Name)
                             break
                         end
                     end
                 end
                 
-                -- Equipar ferramenta se necessário
-                if tool then
-                    if tool.Parent == backpack then
-                        humanoid:EquipTool(tool)
-                        task.wait(0.5)
-                        print("✅ Ferramenta equipada: " .. tool.Name)
-                    end
-                else
-                    print("⚠️ Nenhuma ferramenta encontrada, tentando continuar...")
+                if tool and tool.Parent == backpack then
+                    humanoid:EquipTool(tool)
+                    task.wait(0.5)
                 end
 
-                -- Executar sequência do desync
                 if setfflag then
                     setfflag("WorldStepMax", "-9999999999")
-                    print("✅ WorldStepMax configurado")
-                else
-                    warn("⚠️ setfflag não disponível, desync pode não funcionar completamente")
                 end
                 
                 task.wait(0.2)
                 useItemRemote:FireServer()
-                print("✅ UseItem executado")
-                
                 task.wait(1)
                 teleportRemote:FireServer()
-                print("✅ Teleport executado")
-                
                 task.wait(2)
                 
                 if setfflag then
                     setfflag("WorldStepMax", "-1")
                 end
                 
-                print("✅ Anti-Hit (Desync) ativado com sucesso!")
+                NotificationSystem:show("Anti-Hit ativado!", "success")
                 return true
             end)
             
             if not success then
-                warn("❌ Erro ao ativar Anti-Hit: " .. tostring(errorMsg))
+                NotificationSystem:show("Erro no Anti-Hit", "error")
                 Settings.AntiHit.enabled = false
                 StateManager:set("antiHit", false)
             end
         end)
     else
-        -- Desativar desync
         pcall(function()
             if setfflag then
                 setfflag("WorldStepMax", "-1")
             end
-            print("❌ Anti-Hit (Desync) desativado!")
         end)
+        NotificationSystem:show("Anti-Hit desativado", "info")
     end
 end
 
--- Sistema de ESP Players
+-- ESP Players
 local function setupESPPlayers()
     ConnectionManager:remove("ESPPlayers")
     
-    -- Limpar ESP existente
     for _, highlight in pairs(Settings.ESP.highlights) do
         if highlight and highlight.Parent then highlight:Destroy() end
     end
@@ -397,7 +463,6 @@ local function setupESPPlayers()
                 local humanoid = Cache:get(character, "Humanoid")
                 if not (humanoidRootPart and humanoid) then return end
                 
-                -- Criar highlight
                 local highlight = Instance.new("Highlight")
                 highlight.Name = "PlayerESP"
                 highlight.FillColor = Settings.ESP.color
@@ -407,7 +472,6 @@ local function setupESPPlayers()
                 highlight.Parent = character
                 Settings.ESP.highlights[player] = highlight
                 
-                -- Criar nametag
                 local billboard = Instance.new("BillboardGui")
                 billboard.Name = "PlayerNameTag"
                 billboard.AlwaysOnTop = true
@@ -429,22 +493,16 @@ local function setupESPPlayers()
                 Settings.ESP.nametags[player] = billboard
             end
             
-            if player.Character then
-                addESP()
-            end
-            
+            if player.Character then addESP() end
             player.CharacterAdded:Connect(addESP)
         end
         
-        -- Adicionar ESP para jogadores existentes
         for _, player in ipairs(Players:GetPlayers()) do
             createPlayerESP(player)
         end
         
-        -- Adicionar ESP para novos jogadores
         ConnectionManager:add("ESPPlayers", Players.PlayerAdded:Connect(createPlayerESP))
         
-        -- Remover ESP quando jogadores saem
         ConnectionManager:add("ESPPlayersRemoving", Players.PlayerRemoving:Connect(function(player)
             if Settings.ESP.highlights[player] then
                 Settings.ESP.highlights[player]:Destroy()
@@ -458,7 +516,7 @@ local function setupESPPlayers()
     end
 end
 
--- Sistema de configuração CORRIGIDO
+-- Sistema de configuração
 local function saveConfig()
     local configToSave = {
         Speed = {enabled = Settings.Speed.enabled, value = Settings.Speed.value},
@@ -470,7 +528,8 @@ local function saveConfig()
             color = {Settings.ESP.color.R * 255, Settings.ESP.color.G * 255, Settings.ESP.color.B * 255}
         },
         ESPBetter = {enabled = Settings.ESPBetter.enabled},
-        AntiHit = {enabled = Settings.AntiHit.enabled}
+        AntiHit = {enabled = Settings.AntiHit.enabled},
+        Theme = Settings.Theme
     }
     
     local success, encoded = pcall(function()
@@ -491,54 +550,20 @@ local function loadConfig()
         end)
         
         if success and decoded then
-            -- Aplicar configurações carregadas
-            if decoded.Speed then
-                Settings.Speed.enabled = decoded.Speed.enabled or false
-                Settings.Speed.value = decoded.Speed.value or 50
-            end
-            if decoded.Jump then
-                Settings.Jump.enabled = decoded.Jump.enabled or false
-                Settings.Jump.value = decoded.Jump.value or 90
-            end
-            if decoded.FloatV1 then
-                Settings.FloatV1.enabled = decoded.FloatV1.enabled or false
-            end
-            if decoded.FloatV2 then
-                Settings.FloatV2.enabled = decoded.FloatV2.enabled or false
-            end
-            if decoded.ESP then
-                Settings.ESP.enabled = decoded.ESP.enabled or false
-                if decoded.ESP.color then
-                    Settings.ESP.color = Color3.fromRGB(decoded.ESP.color[1], decoded.ESP.color[2], decoded.ESP.color[3])
+            for key, value in pairs(decoded) do
+                if Settings[key] and type(value) == "table" then
+                    for subKey, subValue in pairs(value) do
+                        if subKey == "color" and type(subValue) == "table" then
+                            Settings[key][subKey] = Color3.fromRGB(subValue[1], subValue[2], subValue[3])
+                        else
+                            Settings[key][subKey] = subValue
+                        end
+                    end
+                elseif key == "Theme" then
+                    Settings.Theme = value
+                    CurrentTheme = Themes[value] or Themes.Ocean
                 end
             end
-            if decoded.ESPBetter then
-                Settings.ESPBetter.enabled = decoded.ESPBetter.enabled or false
-            end
-            if decoded.AntiHit then
-                Settings.AntiHit.enabled = decoded.AntiHit.enabled or false
-            end
-            
-            -- Aplicar configurações carregadas
-            if Settings.Speed.enabled then
-                ConnectionManager:add("Speed", RunService.Heartbeat:Connect(function()
-                    local char = LocalPlayer.Character
-                    if not char then return end
-                    local humanoid = Cache:get(char, "Humanoid")
-                    local rootPart = Cache:get(char, "HumanoidRootPart")
-                    if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
-                        local velocity = humanoid.MoveDirection * Settings.Speed.value
-                        rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
-                    end
-                end))
-            end
-            
-            if Settings.FloatV1.enabled then setupFloatV1() end
-            if Settings.FloatV2.enabled then setupFloatV2() end
-            if Settings.ESP.enabled then setupESPPlayers() end
-            if Settings.ESPBetter.enabled then setupESPBetter() end
-            if Settings.AntiHit.enabled then setupAntiHit() end
-            
             return true
         end
     end
@@ -546,10 +571,8 @@ local function loadConfig()
 end
 
 local function resetConfig()
-    -- Limpar todas as funções ativas
     ConnectionManager:cleanup()
     
-    -- Limpar ESP Players
     for _, highlight in pairs(Settings.ESP.highlights) do
         if highlight and highlight.Parent then highlight:Destroy() end
     end
@@ -557,7 +580,6 @@ local function resetConfig()
         if nametag and nametag.Parent then nametag:Destroy() end
     end
     
-    -- Limpar ESP Better
     if currentESP then
         currentESP:Destroy()
         currentESP = nil
@@ -567,7 +589,6 @@ local function resetConfig()
     end
     highlights = {}
     
-    -- Resetar configurações
     Settings = {
         Speed = {enabled = false, value = 50},
         Jump = {enabled = false, value = 90},
@@ -575,16 +596,15 @@ local function resetConfig()
         FloatV2 = {enabled = false}, 
         ESP = {enabled = false, color = Color3.fromRGB(0, 162, 232), highlights = {}, nametags = {}},
         ESPBetter = {enabled = false},
-        AntiHit = {enabled = false}
+        AntiHit = {enabled = false},
+        Theme = "Ocean"
     }
     
-    -- Reset estados
     StateManager:set("floatV1", false)
     StateManager:set("floatV2", false)
     StateManager:set("bestESP", false)
     StateManager:set("antiHit", false)
     
-    -- Resetar Anti-Hit
     pcall(function()
         if setfflag then
             setfflag("WorldStepMax", "-1")
@@ -593,7 +613,6 @@ local function resetConfig()
     
     Cache:clear()
     
-    -- Deletar arquivo de configuração
     if isfile(CONFIG_FILE_NAME) then
         delfile(CONFIG_FILE_NAME)
     end
@@ -601,24 +620,7 @@ local function resetConfig()
     return true
 end
 
--- Função para UI responsiva
-local function getResponsiveSize()
-    local viewport = Workspace.CurrentCamera.ViewportSize
-    local mobile = isMobile()
-    
-    if mobile then
-        local width = math.min(viewport.X * 0.70, 240)
-        local height = math.min(viewport.Y * 0.55, 260)
-        return {width = width, height = height}
-    else
-        local isSmallScreen = viewport.X < 800 or viewport.Y < 600
-        return isSmallScreen 
-            and {width = math.min(viewport.X * 0.9, 350), height = math.min(viewport.Y * 0.85, 480)}
-            or {width = 450, height = 580}
-    end
-end
-
--- Float V1 - Direção da câmera
+-- Funções Float
 local function setupFloatV1()
     ConnectionManager:remove("FloatV1")
     StateManager:set("floatV1", Settings.FloatV1.enabled)
@@ -626,13 +628,10 @@ local function setupFloatV1()
     if Settings.FloatV1.enabled then
         ConnectionManager:add("FloatV1", RunService.Heartbeat:Connect(function()
             if not StateManager:get("floatV1") then return end
-            
             local char = LocalPlayer.Character
             if not char then return end
-            
             local hrp = Cache:get(char, "HumanoidRootPart")
             local cam = Workspace.CurrentCamera
-            
             if hrp and cam then
                 hrp.Velocity = cam.CFrame.LookVector * 25
             end
@@ -640,7 +639,6 @@ local function setupFloatV1()
     end
 end
 
--- Float V2 - Float aprimorado
 local function setupFloatV2()
     ConnectionManager:remove("FloatV2")
     StateManager:set("floatV2", Settings.FloatV2.enabled)
@@ -648,14 +646,11 @@ local function setupFloatV2()
     if Settings.FloatV2.enabled then
         ConnectionManager:add("FloatV2", RunService.Heartbeat:Connect(function()
             if not StateManager:get("floatV2") then return end
-            
             local char = LocalPlayer.Character
             if not char then return end
-            
             local hrp = Cache:get(char, "HumanoidRootPart")
             local humanoid = Cache:get(char, "Humanoid")
             local cam = Workspace.CurrentCamera
-            
             if hrp and cam and humanoid then
                 local moveVector = humanoid.MoveDirection
                 if moveVector.Magnitude > 0 then
@@ -677,166 +672,285 @@ local function cleanupExistingGUI()
     end
 end
 
--- Criar Toggle com Slider TEMA SHARK
-local function createToggleAndSlider(parent, toggleText, sliderText, min, max, defaultValue, toggleCallback, sliderCallback, currentEnabled, currentValue)
+-- Criar Toggle Moderno com Animações
+local function createModernToggle(parent, icon, text, callback, currentState)
     local mobile = isMobile()
-    local containerHeight = mobile and 55 or 95
     
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, containerHeight)
-    container.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
+    container.Size = UDim2.new(1, -10, 0, mobile and 50 or 70)
+    container.BackgroundColor3 = CurrentTheme.surface
     container.BorderSizePixel = 0
     container.Parent = parent
 
-    local containerCorner = Instance.new("UICorner")
-    containerCorner.CornerRadius = UDim.new(0, 8)
-    containerCorner.Parent = container
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = container
 
-    local containerStroke = Instance.new("UIStroke")
-    containerStroke.Color = Color3.fromRGB(0, 162, 232)
-    containerStroke.Thickness = 1
-    containerStroke.Transparency = 0.5
-    containerStroke.Parent = container
-
-    -- Efeito gradient oceânico
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
+        ColorSequenceKeypoint.new(0, CurrentTheme.surface),
+        ColorSequenceKeypoint.new(1, CurrentTheme.background)
     }
     gradient.Rotation = 90
     gradient.Parent = container
 
-    -- Toggle superior
-    local toggle = Instance.new("Frame")
-    toggle.Size = UDim2.new(1, -8, 0, mobile and 22 or 45)
-    toggle.Position = UDim2.new(0, 4, 0, 2)
-    toggle.BackgroundTransparency = 1
-    toggle.Parent = container
+    -- Ícone
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)
+    iconLabel.Position = UDim2.new(0, 10, 0.5, 0)
+    iconLabel.AnchorPoint = Vector2.new(0, 0.5)
+    iconLabel.BackgroundColor3 = CurrentTheme.primary
+    iconLabel.Text = icon
+    iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    iconLabel.TextSize = mobile and 16 or 20
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.Parent = container
 
-    local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(0.45, 0, 1, 0)
-    toggleLabel.BackgroundTransparency = 1
-    toggleLabel.Text = toggleText
-    toggleLabel.TextColor3 = Color3.fromRGB(176, 224, 230)
-    toggleLabel.TextSize = mobile and 8 or 18
-    toggleLabel.Font = Enum.Font.GothamBold
-    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    toggleLabel.TextWrapped = true
-    toggleLabel.TextScaled = mobile
-    toggleLabel.Parent = toggle
+    local iconCorner = Instance.new("UICorner")
+    iconCorner.CornerRadius = UDim.new(0, 8)
+    iconCorner.Parent = iconLabel
 
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, mobile and 35 or 70, 0, mobile and 18 or 35)
-    toggleButton.Position = UDim2.new(1, mobile and -38 or -75, 0, mobile and 2 or 5)
-    toggleButton.BackgroundColor3 = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
-    toggleButton.Text = currentEnabled and "ON" or "OFF"
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.TextSize = mobile and 7 or 14
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.BorderSizePixel = 0
-    toggleButton.Parent = toggle
+    -- Texto
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    textLabel.Position = UDim2.new(0, mobile and 50 or 65, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = CurrentTheme.accent
+    textLabel.TextSize = mobile and 12 or 16
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Parent = container
 
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 9)
-    toggleCorner.Parent = toggleButton
+    -- Switch animado
+    local switchFrame = Instance.new("Frame")
+    switchFrame.Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 25 or 30)
+    switchFrame.Position = UDim2.new(1, mobile and -60 or -70, 0.5, 0)
+    switchFrame.AnchorPoint = Vector2.new(0, 0.5)
+    switchFrame.BackgroundColor3 = currentState and CurrentTheme.primary or Color3.fromRGB(60, 60, 60)
+    switchFrame.BorderSizePixel = 0
+    switchFrame.Parent = container
 
-    local toggleGlow = Instance.new("UIStroke")
-    toggleGlow.Color = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
-    toggleGlow.Thickness = 2
-    toggleGlow.Transparency = 0.5
-    toggleGlow.Parent = toggleButton
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(1, 0)
+    switchCorner.Parent = switchFrame
 
-    -- Slider inferior
-    local slider = Instance.new("Frame")
-    slider.Size = UDim2.new(1, -8, 0, mobile and 12 or 30)
-    slider.Position = UDim2.new(0, 4, 0, mobile and 27 or 55)
-    slider.BackgroundTransparency = 1
-    slider.Parent = container
+    local switchBall = Instance.new("Frame")
+    switchBall.Size = UDim2.new(0, mobile and 21 or 26, 0, mobile and 21 or 26)
+    switchBall.Position = currentState and UDim2.new(1, -23, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+    switchBall.AnchorPoint = Vector2.new(0, 0.5)
+    switchBall.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    switchBall.BorderSizePixel = 0
+    switchBall.Parent = switchFrame
 
-    local sliderValue = currentValue or defaultValue
+    local ballCorner = Instance.new("UICorner")
+    ballCorner.CornerRadius = UDim.new(1, 0)
+    ballCorner.Parent = switchBall
+
+    local ballShadow = Instance.new("UIStroke")
+    ballShadow.Color = Color3.fromRGB(0, 0, 0)
+    ballShadow.Thickness = 2
+    ballShadow.Transparency = 0.8
+    ballShadow.Parent = switchBall
+
+    local switchButton = Instance.new("TextButton")
+    switchButton.Size = UDim2.new(1, 0, 1, 0)
+    switchButton.BackgroundTransparency = 1
+    switchButton.Text = ""
+    switchButton.Parent = switchFrame
+
+    local isEnabled = currentState or false
+
+    -- Animação ao clicar
+    switchButton.MouseButton1Click:Connect(function()
+        isEnabled = not isEnabled
+        
+        -- Animação do switch
+        TweenService:Create(switchFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+            BackgroundColor3 = isEnabled and CurrentTheme.primary or Color3.fromRGB(60, 60, 60)
+        }):Play()
+        
+        TweenService:Create(switchBall, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+            Position = isEnabled and UDim2.new(1, mobile and -23 or -28, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+        }):Play()
+        
+        -- Efeito de pulse no ícone
+        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, mobile and 35 or 45, 0, mobile and 35 or 45)
+        }):Play()
+        
+        task.wait(0.2)
+        
+        TweenService:Create(iconLabel, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, mobile and 30 or 40, 0, mobile and 30 or 40)
+        }):Play()
+        
+        if callback then callback(isEnabled) end
+    end)
+
+    -- Efeito hover
+    container.MouseEnter:Connect(function()
+        TweenService:Create(container, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.1
+        }):Play()
+    end)
+
+    container.MouseLeave:Connect(function()
+        TweenService:Create(container, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0
+        }):Play()
+    end)
+
+    return container
+end
+
+-- Criar Slider Moderno
+local function createModernSlider(parent, icon, text, min, max, default, callback, current)
+    local mobile = isMobile()
     
-    local sliderLabel = Instance.new("TextLabel")
-    sliderLabel.Size = UDim2.new(0.25, 0, 1, 0)
-    sliderLabel.BackgroundTransparency = 1
-    sliderLabel.Text = sliderText .. ": " .. tostring(sliderValue)
-    sliderLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-    sliderLabel.TextSize = mobile and 5 or 14
-    sliderLabel.Font = Enum.Font.Gotham
-    sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
-    sliderLabel.TextScaled = mobile
-    sliderLabel.Parent = slider
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -10, 0, mobile and 80 or 100)
+    container.BackgroundColor3 = CurrentTheme.surface
+    container.BorderSizePixel = 0
+    container.Parent = parent
 
-    local sliderBar = Instance.new("Frame")
-    sliderBar.Size = UDim2.new(0.70, 0, 0, mobile and 6 or 10)
-    sliderBar.Position = UDim2.new(0.28, 0, 0, mobile and 3 or 10)
-    sliderBar.BackgroundColor3 = Color3.fromRGB(20, 40, 60)
-    sliderBar.BorderSizePixel = 0
-    sliderBar.Parent = slider
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = container
 
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((sliderValue - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 162, 232)
-    sliderFill.BorderSizePixel = 0
-    sliderFill.Parent = sliderBar
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, CurrentTheme.surface),
+        ColorSequenceKeypoint.new(1, CurrentTheme.background)
+    }
+    gradient.Rotation = 90
+    gradient.Parent = container
+
+    -- Header
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1, 0, 0, mobile and 40 or 50)
+    header.BackgroundTransparency = 1
+    header.Parent = container
+
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, mobile and 25 or 35, 0, mobile and 25 or 35)
+    iconLabel.Position = UDim2.new(0, 10, 0.5, 0)
+    iconLabel.AnchorPoint = Vector2.new(0, 0.5)
+    iconLabel.BackgroundColor3 = CurrentTheme.primary
+    iconLabel.Text = icon
+    iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    iconLabel.TextSize = mobile and 14 or 18
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.Parent = header
+
+    local iconCorner = Instance.new("UICorner")
+    iconCorner.CornerRadius = UDim.new(0, 6)
+    iconCorner.Parent = iconLabel
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    textLabel.Position = UDim2.new(0, mobile and 45 or 55, 0, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = text
+    textLabel.TextColor3 = CurrentTheme.accent
+    textLabel.TextSize = mobile and 11 or 15
+    textLabel.Font = Enum.Font.GothamBold
+    textLabel.TextXAlignment = Enum.TextXAlignment.Left
+    textLabel.Parent = header
+
+    local currentValue = current or default
+    
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 60, 1, 0)
+    valueLabel.Position = UDim2.new(1, -70, 0, 0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(currentValue)
+    valueLabel.TextColor3 = CurrentTheme.primary
+    valueLabel.TextSize = mobile and 14 or 18
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Parent = header
+
+    -- Slider
+    local sliderFrame = Instance.new("Frame")
+    sliderFrame.Size = UDim2.new(1, -20, 0, mobile and 8 or 10)
+    sliderFrame.Position = UDim2.new(0, 10, 1, mobile and -20 or -25)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    sliderFrame.BorderSizePixel = 0
+    sliderFrame.Parent = container
 
     local sliderCorner = Instance.new("UICorner")
-    sliderCorner.CornerRadius = UDim.new(0, 3)
-    sliderCorner.Parent = sliderBar
+    sliderCorner.CornerRadius = UDim.new(1, 0)
+    sliderCorner.Parent = sliderFrame
 
-    local sliderFillCorner = Instance.new("UICorner")
-    sliderFillCorner.CornerRadius = UDim.new(0, 3)
-    sliderFillCorner.Parent = sliderFill
+    local sliderFill = Instance.new("Frame")
+    sliderFill.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = CurrentTheme.primary
+    sliderFill.BorderSizePixel = 0
+    sliderFill.Parent = sliderFrame
+
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = sliderFill
+
+    local fillGradient = Instance.new("UIGradient")
+    fillGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, CurrentTheme.primary),
+        ColorSequenceKeypoint.new(1, CurrentTheme.accent)
+    }
+    fillGradient.Parent = sliderFill
 
     local sliderThumb = Instance.new("Frame")
-    sliderThumb.Size = UDim2.new(0, mobile and 10 or 16, 0, mobile and 10 or 16)
-    sliderThumb.Position = UDim2.new((sliderValue - min) / (max - min), -5, 0, -2)
-    sliderThumb.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+    sliderThumb.Size = UDim2.new(0, mobile and 16 or 20, 0, mobile and 16 or 20)
+    sliderThumb.Position = UDim2.new((currentValue - min) / (max - min), -10, 0.5, 0)
+    sliderThumb.AnchorPoint = Vector2.new(0, 0.5)
+    sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     sliderThumb.BorderSizePixel = 0
-    sliderThumb.Parent = sliderBar
+    sliderThumb.Parent = sliderFrame
 
     local thumbCorner = Instance.new("UICorner")
-    thumbCorner.CornerRadius = UDim.new(0, 8)
+    thumbCorner.CornerRadius = UDim.new(1, 0)
     thumbCorner.Parent = sliderThumb
 
-    -- Efeito de brilho no thumb
-    local thumbGlow = Instance.new("UIStroke")
-    thumbGlow.Color = Color3.fromRGB(0, 255, 255)
-    thumbGlow.Thickness = 1
-    thumbGlow.Transparency = 0.5
-    thumbGlow.Parent = sliderThumb
+    local thumbShadow = Instance.new("UIStroke")
+    thumbShadow.Color = CurrentTheme.primary
+    thumbShadow.Thickness = 2
+    thumbShadow.Parent = sliderThumb
 
     local sliderButton = Instance.new("TextButton")
-    sliderButton.Size = UDim2.new(1, 0, 1, 10)
-    sliderButton.Position = UDim2.new(0, 0, 0, -5)
+    sliderButton.Size = UDim2.new(1, 0, 1, 20)
+    sliderButton.Position = UDim2.new(0, 0, 0, -10)
     sliderButton.BackgroundTransparency = 1
     sliderButton.Text = ""
-    sliderButton.Parent = sliderBar
+    sliderButton.Parent = sliderFrame
 
-    -- Lógica do slider
     local dragging = false
-    local isEnabled = currentEnabled or false
 
     local function updateSlider(position)
-        local relativeX = math.clamp((position.X - sliderBar.AbsolutePosition.X) / sliderBar.AbsoluteSize.X, 0, 1)
-        sliderValue = math.floor(min + (max - min) * relativeX)
+        local relativeX = math.clamp((position.X - sliderFrame.AbsolutePosition.X) / sliderFrame.AbsoluteSize.X, 0, 1)
+        currentValue = math.floor(min + (max - min) * relativeX)
         sliderFill.Size = UDim2.new(relativeX, 0, 1, 0)
-        sliderThumb.Position = UDim2.new(relativeX, -5, 0, -2)
-        sliderLabel.Text = sliderText .. ": " .. tostring(sliderValue)
-        if sliderCallback then sliderCallback(sliderValue) end
+        sliderThumb.Position = UDim2.new(relativeX, -10, 0.5, 0)
+        valueLabel.Text = tostring(currentValue)
+        if callback then callback(currentValue) end
     end
 
-    -- Touch e mouse support
     sliderButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             updateSlider(input.Position)
+            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, mobile and 20 or 24, 0, mobile and 20 or 24)
+            }):Play()
         end
     end)
     
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
+            TweenService:Create(sliderThumb, TweenInfo.new(0.1), {
+                Size = UDim2.new(0, mobile and 16 or 20, 0, mobile and 16 or 20)
+            }):Play()
         end
     end)
 
@@ -846,257 +960,44 @@ local function createToggleAndSlider(parent, toggleText, sliderText, min, max, d
         end
     end)
 
-    -- Lógica do toggle
-    toggleButton.MouseButton1Click:Connect(function()
-        isEnabled = not isEnabled
-        local newColor = isEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
-        
-        TweenService:Create(toggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            BackgroundColor3 = newColor
-        }):Play()
-        
-        TweenService:Create(toggleGlow, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            Color = newColor
-        }):Play()
-        
-        toggleButton.Text = isEnabled and "ON" or "OFF"
-        if toggleCallback then toggleCallback(isEnabled) end
-    end)
-
     return container
 end
 
--- Criar Toggle simples TEMA SHARK
-local function createToggleOnly(parent, toggleText, toggleCallback, currentEnabled)
-    local mobile = isMobile()
+-- Sistema de Drag melhorado
+local function setupDrag(frame, handle)
+    local dragging, dragStart, startPos = false, nil, nil
     
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, mobile and 26 or 60)
-    container.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
-    container.BorderSizePixel = 0
-    container.Parent = parent
-
-    local containerCorner = Instance.new("UICorner")
-    containerCorner.CornerRadius = UDim.new(0, 8)
-    containerCorner.Parent = container
-
-    local containerStroke = Instance.new("UIStroke")
-    containerStroke.Color = Color3.fromRGB(0, 162, 232)
-    containerStroke.Thickness = 1
-    containerStroke.Transparency = 0.5
-    containerStroke.Parent = container
-
-    -- Efeito gradient oceânico
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
-    }
-    gradient.Rotation = 90
-    gradient.Parent = container
-
-    local toggle = Instance.new("Frame")
-    toggle.Size = UDim2.new(1, -8, 0, mobile and 18 or 40)
-    toggle.Position = UDim2.new(0, 4, 0, mobile and 4 or 10)
-    toggle.BackgroundTransparency = 1
-    toggle.Parent = container
-
-    local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(0.45, 0, 1, 0)
-    toggleLabel.BackgroundTransparency = 1
-    toggleLabel.Text = toggleText
-    toggleLabel.TextColor3 = Color3.fromRGB(176, 224, 230)
-    toggleLabel.TextSize = mobile and 8 or 18
-    toggleLabel.Font = Enum.Font.GothamBold
-    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    toggleLabel.TextWrapped = true
-    toggleLabel.TextScaled = mobile
-    toggleLabel.Parent = toggle
-
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, mobile and 35 or 70, 0, mobile and 18 or 35)
-    toggleButton.Position = UDim2.new(1, mobile and -38 or -75, 0, mobile and 0 or 2.5)
-    toggleButton.BackgroundColor3 = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
-    toggleButton.Text = currentEnabled and "ON" or "OFF"
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.TextSize = mobile and 7 or 14
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.BorderSizePixel = 0
-    toggleButton.Parent = toggle
-
-    local toggleCorner = Instance.new("UICorner")
-    toggleCorner.CornerRadius = UDim.new(0, 9)
-    toggleCorner.Parent = toggleButton
-
-    local toggleGlow = Instance.new("UIStroke")
-    toggleGlow.Color = currentEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
-    toggleGlow.Thickness = 2
-    toggleGlow.Transparency = 0.5
-    toggleGlow.Parent = toggleButton
-
-    local isEnabled = currentEnabled or false
-
-    toggleButton.MouseButton1Click:Connect(function()
-        isEnabled = not isEnabled
-        local newColor = isEnabled and Color3.fromRGB(0, 162, 232) or Color3.fromRGB(70, 70, 110)
-        
-        TweenService:Create(toggleButton, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            BackgroundColor3 = newColor
-        }):Play()
-        
-        TweenService:Create(toggleGlow, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            Color = newColor
-        }):Play()
-        
-        toggleButton.Text = isEnabled and "ON" or "OFF"
-        if toggleCallback then toggleCallback(isEnabled) end
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
     end)
-
-    return container
-end
-
--- Criar botão de cor TEMA SHARK
-local function createColorButton(parent, colorData, callback)
-    local mobile = isMobile()
     
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, mobile and 58 or 110, 0, mobile and 18 or 35)
-    button.BackgroundColor3 = colorData.color
-    button.Text = colorData.name
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = mobile and 5 or 12
-    button.Font = Enum.Font.GothamBold
-    button.BorderSizePixel = 0
-    button.TextStrokeTransparency = 0
-    button.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    button.Parent = parent
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
-    corner.Parent = button
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(0, 255, 255)
-    stroke.Thickness = 2
-    stroke.Transparency = 1
-    stroke.Parent = button
-
-    button.MouseButton1Click:Connect(function()
-        if callback then callback(colorData.color) end
-        
-        TweenService:Create(stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-            Transparency = 0
-        }):Play()
-        
-        task.spawn(function()
-            task.wait(0.3)
-            TweenService:Create(stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
-                Transparency = 1
-            }):Play()
-        end)
-    end)
-
-    return button
-end
-
--- Sistema de Drag Universal
-local function setupUniversalDrag(frame, dragTarget)
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
-
-    local function startDrag(input)
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-
-    local function updateDrag(input)
-        if dragging then
-            local delta = input.Position - dragStart
-            local viewport = Workspace.CurrentCamera.ViewportSize
-            local newPos = UDim2.new(
-                0, math.clamp(startPos.X.Offset + delta.X, 0, viewport.X - frame.AbsoluteSize.X),
-                0, math.clamp(startPos.Y.Offset + delta.Y, 0, viewport.Y - frame.AbsoluteSize.Y)
-            )
-            frame.Position = newPos
-        end
-    end
-
-    local function stopDrag()
-        dragging = false
-    end
-
-    -- Eventos do target
-    dragTarget.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            startDrag(input)
-        end
-    end)
-
-    dragTarget.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            updateDrag(input)
-        end
-    end)
-
-    dragTarget.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            stopDrag()
-        end
-    end)
-
-    -- Eventos globais
     UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            updateDrag(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
         end
     end)
-
+    
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            stopDrag()
+            dragging = false
         end
     end)
 end
 
--- Sistema de Touch Scroll
-local function setupTouchScroll(scrollFrame)
-    if not isMobile() then return end
-    
-    local lastTouchPos = nil
-    local touchScrolling = false
-    
-    scrollFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            lastTouchPos = input.Position
-            touchScrolling = true
-        end
-    end)
-    
-    scrollFrame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch and touchScrolling and lastTouchPos then
-            local delta = input.Position - lastTouchPos
-            local newCanvasPos = scrollFrame.CanvasPosition - Vector2.new(0, delta.Y)
-            newCanvasPos = Vector2.new(0, math.clamp(newCanvasPos.Y, 0, math.max(0, scrollFrame.AbsoluteCanvasSize.Y - scrollFrame.AbsoluteSize.Y)))
-            scrollFrame.CanvasPosition = newCanvasPos
-            lastTouchPos = input.Position
-        end
-    end)
-    
-    scrollFrame.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            touchScrolling = false
-            lastTouchPos = nil
-        end
-    end)
-end
-
--- Função principal para criar UI TEMA SHARK
+-- UI Principal
 local function createUI()
     cleanupExistingGUI()
-
-    local responsiveSize = getResponsiveSize()
+    
     local mobile = isMobile()
     
     local screenGui = Instance.new("ScreenGui")
@@ -1104,523 +1005,487 @@ local function createUI()
     screenGui.ResetOnSpawn = false
     screenGui.Parent = PlayerGui
 
-    -- Frame principal TEMA SHARK
+    -- Blur de fundo
+    local blur = Instance.new("BlurEffect")
+    blur.Size = 0
+    blur.Parent = Lighting
+
+    -- Frame principal
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, responsiveSize.width, 0, responsiveSize.height)
-    mainFrame.Position = UDim2.new(0.5, -responsiveSize.width/2, 0.5, -responsiveSize.height/2)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(10, 20, 35)
+    mainFrame.Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.BackgroundColor3 = CurrentTheme.background
     mainFrame.BorderSizePixel = 0
-    mainFrame.Active = true
     mainFrame.Parent = screenGui
 
-    -- Decorações oceânicas
     local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, mobile and 8 or 20)
+    mainCorner.CornerRadius = UDim.new(0, 20)
     mainCorner.Parent = mainFrame
 
-    local mainStroke = Instance.new("UIStroke")
-    mainStroke.Color = Color3.fromRGB(0, 162, 232)
-    mainStroke.Thickness = mobile and 2 or 3
-    mainStroke.Transparency = 0.2
-    mainStroke.Parent = mainFrame
+    local mainShadow = Instance.new("UIStroke")
+    mainShadow.Color = Color3.fromRGB(0, 0, 0)
+    mainShadow.Thickness = 4
+    mainShadow.Transparency = 0.7
+    mainShadow.Parent = mainFrame
 
-    -- Gradiente oceânico
-    local mainGradient = Instance.new("UIGradient")
-    mainGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 40, 70)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(10, 20, 35)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 10, 20))
+    -- Animação de entrada
+    mainFrame.Size = UDim2.new(0, 0, 0, 0)
+    TweenService:Create(blur, TweenInfo.new(0.5), {Size = 10}):Play()
+    TweenService:Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {
+        Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600)
+    }):Play()
+
+    -- Header
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1, 0, 0, mobile and 60 or 80)
+    header.BackgroundColor3 = CurrentTheme.primary
+    header.BorderSizePixel = 0
+    header.Parent = mainFrame
+
+    local headerCorner = Instance.new("UICorner")
+    headerCorner.CornerRadius = UDim.new(0, 20)
+    headerCorner.Parent = header
+
+    local headerFix = Instance.new("Frame")
+    headerFix.Size = UDim2.new(1, 0, 0, 20)
+    headerFix.Position = UDim2.new(0, 0, 1, -20)
+    headerFix.BackgroundColor3 = CurrentTheme.primary
+    headerFix.BorderSizePixel = 0
+    headerFix.Parent = header
+
+    local headerGradient = Instance.new("UIGradient")
+    headerGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, CurrentTheme.primary),
+        ColorSequenceKeypoint.new(1, CurrentTheme.secondary)
     }
-    mainGradient.Rotation = 90
-    mainGradient.Parent = mainFrame
+    headerGradient.Rotation = 90
+    headerGradient.Parent = header
 
-    -- Barra de título TEMA SHARK
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0, mobile and 22 or 60)
-    titleBar.BackgroundColor3 = Color3.fromRGB(0, 60, 100)
-    titleBar.BorderSizePixel = 0
-    titleBar.Active = true
-    titleBar.Parent = mainFrame
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -80, 1, 0)
+    title.Position = UDim2.new(0, 20, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "🦈 SHARK HUB"
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = mobile and 20 or 28
+    title.Font = Enum.Font.GothamBold
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = header
 
-    local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, mobile and 8 or 20)
-    titleCorner.Parent = titleBar
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Size = UDim2.new(1, -80, 0, 20)
+    subtitle.Position = UDim2.new(0, 20, 1, -25)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = "Premium Edition v2.0"
+    subtitle.TextColor3 = CurrentTheme.accent
+    subtitle.TextSize = mobile and 10 or 12
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    subtitle.Parent = header
 
-    local titleGradient = Instance.new("UIGradient")
-    titleGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 162, 232)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 100, 148)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 60, 100))
-    }
-    titleGradient.Rotation = 90
-    titleGradient.Parent = titleBar
+    -- Botão minimizar
+    local minimizeBtn = Instance.new("TextButton")
+    minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+    minimizeBtn.Position = UDim2.new(1, -70, 0.5, 0)
+    minimizeBtn.AnchorPoint = Vector2.new(0, 0.5)
+    minimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    minimizeBtn.Text = "—"
+    minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeBtn.TextSize = 20
+    minimizeBtn.Font = Enum.Font.GothamBold
+    minimizeBtn.BorderSizePixel = 0
+    minimizeBtn.Parent = header
 
-    -- Efeito de onda animada
-    local waveEffect = Instance.new("Frame")
-    waveEffect.Size = UDim2.new(1, 0, 0, 2)
-    waveEffect.Position = UDim2.new(0, 0, 1, -2)
-    waveEffect.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
-    waveEffect.BorderSizePixel = 0
-    waveEffect.Parent = titleBar
-
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, mobile and -25 or -70, 1, 0)
-    titleLabel.Position = UDim2.new(0, mobile and 5 or 20, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "🦈 SharkHUB 🦈"
-    titleLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-    titleLabel.TextSize = mobile and 9 or 24
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextScaled = mobile
-    titleLabel.TextStrokeTransparency = 0.5
-    titleLabel.TextStrokeColor3 = Color3.fromRGB(0, 40, 70)
-    titleLabel.Parent = titleBar
+    local minCorner = Instance.new("UICorner")
+    minCorner.CornerRadius = UDim.new(0, 8)
+    minCorner.Parent = minimizeBtn
 
     -- Botão fechar
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, mobile and 18 or 40, 0, mobile and 18 or 40)
-    closeBtn.Position = UDim2.new(1, mobile and -20 or -50, 0, mobile and 2 or 10)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0.5, 0)
+    closeBtn.AnchorPoint = Vector2.new(0, 0.5)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
     closeBtn.Text = "×"
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextSize = mobile and 10 or 24
+    closeBtn.TextSize = 24
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.BorderSizePixel = 0
-    closeBtn.Parent = titleBar
+    closeBtn.Parent = header
 
     local closeCorner = Instance.new("UICorner")
-    closeCorner.CornerRadius = UDim.new(0, mobile and 9 or 20)
+    closeCorner.CornerRadius = UDim.new(0, 8)
     closeCorner.Parent = closeBtn
 
-    -- UI minimizada SHARK
-    local minimizedFrame = Instance.new("Frame")
-    minimizedFrame.Name = "MinimizedFrame"  
-    minimizedFrame.Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 50 or 60)
-    minimizedFrame.Position = UDim2.new(0, 20, 0, 20)
-    minimizedFrame.BackgroundColor3 = Color3.fromRGB(0, 60, 100)
-    minimizedFrame.Visible = false
-    minimizedFrame.Active = true
-    minimizedFrame.Parent = screenGui
-
-    local miniCorner = Instance.new("UICorner")
-    miniCorner.CornerRadius = UDim.new(0, mobile and 12 or 15)
-    miniCorner.Parent = minimizedFrame
-
-    local miniStroke = Instance.new("UIStroke")
-    miniStroke.Color = Color3.fromRGB(0, 162, 232)
-    miniStroke.Thickness = 3
-    miniStroke.Parent = minimizedFrame
-
-    local miniGradient = Instance.new("UIGradient")
-    miniGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 162, 232)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 60, 100))
-    }
-    miniGradient.Rotation = 135
-    miniGradient.Parent = minimizedFrame
-
-    local miniLabel = Instance.new("TextLabel")
-    miniLabel.Size = UDim2.new(1, 0, 1, 0)
-    miniLabel.BackgroundTransparency = 1
-    miniLabel.Text = "🦈"
-    miniLabel.TextColor3 = Color3.fromRGB(0, 255, 255)
-    miniLabel.TextSize = mobile and 24 or 28
-    miniLabel.Font = Enum.Font.GothamBold
-    miniLabel.Parent = minimizedFrame
-
-    -- Setup drag
-    setupUniversalDrag(mainFrame, titleBar)
-    
-    -- Drag para UI minimizada
-    local miniDragging = false
-    local miniClickStart = 0
-    local miniClickThreshold = 0.3
-
-    local function setupMinimizedInteraction()
-        minimizedFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                miniClickStart = tick()
-                miniDragging = false
-            end
-        end)
-
-        minimizedFrame.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                local clickDuration = tick() - miniClickStart
-                
-                if clickDuration < miniClickThreshold and not miniDragging then
-                    minimizedFrame.Visible = false
-                    mainFrame.Visible = true
-                    
-                    mainFrame.Size = UDim2.new(0, 0, 0, 0)
-                    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-                    
-                    local expandTween = TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                        Size = UDim2.new(0, responsiveSize.width, 0, responsiveSize.height),
-                        Position = UDim2.new(0.5, -responsiveSize.width/2, 0.5, -responsiveSize.height/2)
-                    })
-                    expandTween:Play()
-                end
-            end
-        end)
-    end
-
-    setupMinimizedInteraction()
-    setupUniversalDrag(minimizedFrame, minimizedFrame)
-
-    -- Container principal com margem para scroll
-    local containerTop = mobile and 40 or 130
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -10, 1, -containerTop - 10)
-    container.Position = UDim2.new(0, 5, 0, containerTop)
-    container.BackgroundTransparency = 1
-    container.Parent = mainFrame
-
-    -- Sistema de abas SHARK
-    local tabButtons = Instance.new("Frame")
-    tabButtons.Size = UDim2.new(1, -10, 0, mobile and 18 or 45)
-    tabButtons.Position = UDim2.new(0, 5, 0, mobile and 25 or 75)
-    tabButtons.BackgroundTransparency = 1
-    tabButtons.Parent = mainFrame
+    -- Tabs
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Size = UDim2.new(1, -20, 0, mobile and 35 or 45)
+    tabContainer.Position = UDim2.new(0, 10, 0, mobile and 70 or 90)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.Parent = mainFrame
 
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.FillDirection = Enum.FillDirection.Horizontal
-    tabLayout.Padding = UDim.new(0, mobile and 2 or 15)
-    tabLayout.Parent = tabButtons
+    tabLayout.Padding = UDim.new(0, 5)
+    tabLayout.Parent = tabContainer
 
-    local function createTab(name, text)
-        local tabBtn = Instance.new("TextButton")
-        tabBtn.Size = UDim2.new(0, mobile and 70 or 120, 1, 0)
-        tabBtn.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
-        tabBtn.BorderSizePixel = 0
-        tabBtn.Text = text
-        tabBtn.TextColor3 = Color3.fromRGB(176, 224, 230)
-        tabBtn.Font = Enum.Font.GothamBold
-        tabBtn.TextSize = mobile and 6 or 16
-        tabBtn.TextScaled = mobile
-        tabBtn.Parent = tabButtons
+    local sections = {}
+    local tabs = {}
 
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, mobile and 4 or 10)
-        corner.Parent = tabBtn
+    local function createTab(name, icon)
+        local tab = Instance.new("TextButton")
+        tab.Size = UDim2.new(0.333, -5, 1, 0)
+        tab.BackgroundColor3 = CurrentTheme.surface
+        tab.Text = icon .. " " .. name
+        tab.TextColor3 = CurrentTheme.accent
+        tab.TextSize = mobile and 12 or 16
+        tab.Font = Enum.Font.GothamBold
+        tab.BorderSizePixel = 0
+        tab.Parent = tabContainer
 
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = Color3.fromRGB(0, 100, 148)
-        stroke.Thickness = 1
-        stroke.Transparency = 0.5
-        stroke.Parent = tabBtn
+        local tabCorner = Instance.new("UICorner")
+        tabCorner.CornerRadius = UDim.new(0, 10)
+        tabCorner.Parent = tab
 
-        return tabBtn
+        local tabStroke = Instance.new("UIStroke")
+        tabStroke.Color = CurrentTheme.primary
+        tabStroke.Thickness = 0
+        tabStroke.Transparency = 0.5
+        tabStroke.Parent = tab
+
+        tabs[name] = {button = tab, stroke = tabStroke}
+        return tab
     end
 
-    local playerTab = createTab("Player", "⚡ Player")
-    local helperTab = createTab("Helper", "🎯 Helper")  
-    local configTab = createTab("Config", "⚙️ Config")
+    local playerTab = createTab("Player", "⚡")
+    local visualTab = createTab("Visual", "👁")
+    local configTab = createTab("Config", "⚙")
 
-    -- Criar seções com scroll funcional
+    -- Content
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -20, 1, mobile and -120 or -150)
+    content.Position = UDim2.new(0, 10, 0, mobile and 110 or 140)
+    content.BackgroundTransparency = 1
+    content.Parent = mainFrame
+
+    -- Sections
     local function createSection(name)
         local section = Instance.new("ScrollingFrame")
-        section.Name = name .. "Section"
+        section.Name = name
         section.Size = UDim2.new(1, 0, 1, 0)
-        section.Position = UDim2.new(0, 0, 0, 0)
         section.BackgroundTransparency = 1
         section.BorderSizePixel = 0
-        section.Visible = false
-        section.ScrollBarThickness = mobile and 8 or 6
-        section.ScrollBarImageColor3 = Color3.fromRGB(0, 162, 232)
-        section.ScrollBarImageTransparency = 0.3
-        section.ScrollingDirection = Enum.ScrollingDirection.Y
-        section.ScrollingEnabled = true
+        section.ScrollBarThickness = 4
+        section.ScrollBarImageColor3 = CurrentTheme.primary
+        section.ScrollBarImageTransparency = 0.5
         section.CanvasSize = UDim2.new(0, 0, 0, 0)
         section.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        section.ElasticBehavior = Enum.ElasticBehavior.Always
-        section.Parent = container
+        section.Visible = false
+        section.Parent = content
 
-        local layout = Instance.new("UIListLayout")
-        layout.Padding = UDim.new(0, mobile and 4 or 15)
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Parent = section
+        local sectionLayout = Instance.new("UIListLayout")
+        sectionLayout.Padding = UDim.new(0, 10)
+        sectionLayout.Parent = section
 
-        local padding = Instance.new("UIPadding")
-        padding.PaddingTop = UDim.new(0, mobile and 4 or 10)
-        padding.PaddingBottom = UDim.new(0, mobile and 8 or 10)
-        padding.PaddingLeft = UDim.new(0, 0)
-        padding.PaddingRight = UDim.new(0, mobile and 8 or 5)
-        padding.Parent = section
-
-        setupTouchScroll(section)
-
+        sections[name] = section
         return section
     end
 
     local playerSection = createSection("Player")
-    local helperSection = createSection("Helper")
+    local visualSection = createSection("Visual")
     local configSection = createSection("Config")
 
-    -- Mostrar primeira aba
-    playerSection.Visible = true
-    playerTab.BackgroundColor3 = Color3.fromRGB(0, 100, 148)
-
-    -- Sistema de troca de abas
-    local function switchTab(targetSection, targetBtn)
-        playerSection.Visible = false
-        helperSection.Visible = false
-        configSection.Visible = false
-        
-        playerTab.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
-        helperTab.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
-        configTab.BackgroundColor3 = Color3.fromRGB(0, 40, 70)
-        
-        targetSection.Visible = true
-        targetBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 148)
-        
-        -- Reset scroll para o topo
-        targetSection.CanvasPosition = Vector2.new(0, 0)
+    -- Função para trocar tabs
+    local currentTab = "Player"
+    local function switchTab(name)
+        for tabName, tabData in pairs(tabs) do
+            if tabName == name then
+                sections[tabName].Visible = true
+                tabData.stroke.Thickness = 2
+                TweenService:Create(tabData.button, TweenInfo.new(0.3), {
+                    BackgroundColor3 = CurrentTheme.primary
+                }):Play()
+            else
+                sections[tabName].Visible = false
+                tabData.stroke.Thickness = 0
+                TweenService:Create(tabData.button, TweenInfo.new(0.3), {
+                    BackgroundColor3 = CurrentTheme.surface
+                }):Play()
+            end
+        end
+        currentTab = name
     end
 
-    playerTab.MouseButton1Click:Connect(function() switchTab(playerSection, playerTab) end)
-    helperTab.MouseButton1Click:Connect(function() switchTab(helperSection, helperTab) end)
-    configTab.MouseButton1Click:Connect(function() switchTab(configSection, configTab) end)
+    playerTab.MouseButton1Click:Connect(function() switchTab("Player") end)
+    visualTab.MouseButton1Click:Connect(function() switchTab("Visual") end)
+    configTab.MouseButton1Click:Connect(function() switchTab("Config") end)
 
-    -- Controles da seção Player
-    createToggleAndSlider(playerSection, "⚡ Speed Hack", "Speed", 16, 100, Settings.Speed.value,
-        function(enabled)
-            Settings.Speed.enabled = enabled
-            ConnectionManager:remove("Speed")
-            if enabled then
-                ConnectionManager:add("Speed", RunService.Heartbeat:Connect(function()
-                    local char = LocalPlayer.Character
-                    if not char then return end
-                    local humanoid = Cache:get(char, "Humanoid")
-                    local rootPart = Cache:get(char, "HumanoidRootPart")
-                    if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
-                        local velocity = humanoid.MoveDirection * Settings.Speed.value
-                        rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
-                    end
-                end))
-            end
-        end,
+    switchTab("Player")
+
+    -- Player Section
+    createModernSlider(playerSection, "⚡", "Speed Boost", 16, 100, Settings.Speed.value,
         function(value) Settings.Speed.value = value end,
-        Settings.Speed.enabled,
         Settings.Speed.value
     )
 
-    local canJump = true
-    createToggleAndSlider(playerSection, "🚀 Jump Hack", "Jump Power", 50, 150, Settings.Jump.value,
-        function(enabled)
-            Settings.Jump.enabled = enabled
-            ConnectionManager:remove("Jump")
-            if enabled then
-                ConnectionManager:add("Jump", UserInputService.JumpRequest:Connect(function()
-                    if not canJump then return end
-                    local char = LocalPlayer.Character
-                    if not char then return end
-                    local rootPart = Cache:get(char, "HumanoidRootPart")
-                    if rootPart then
-                        canJump = false
-                        rootPart.Velocity = Vector3.new(rootPart.Velocity.X, Settings.Jump.value, rootPart.Velocity.Z)
-                        task.spawn(function()
-                            task.wait(1.5)
-                            canJump = true
-                        end)
-                    end
-                end))
-            end
-        end,
+    createModernToggle(playerSection, "🏃", "Enable Speed", function(enabled)
+        Settings.Speed.enabled = enabled
+        ConnectionManager:remove("Speed")
+        if enabled then
+            ConnectionManager:add("Speed", RunService.Heartbeat:Connect(function()
+                local char = LocalPlayer.Character
+                if not char then return end
+                local humanoid = Cache:get(char, "Humanoid")
+                local rootPart = Cache:get(char, "HumanoidRootPart")
+                if humanoid and rootPart and humanoid.MoveDirection.Magnitude > 0 then
+                    local velocity = humanoid.MoveDirection * Settings.Speed.value
+                    rootPart.Velocity = Vector3.new(velocity.X, rootPart.Velocity.Y, velocity.Z)
+                end
+            end))
+            NotificationSystem:show("Speed Hack ativado!", "success")
+        else
+            NotificationSystem:show("Speed Hack desativado", "info")
+        end
+    end, Settings.Speed.enabled)
+
+    createModernSlider(playerSection, "🚀", "Jump Power", 50, 200, Settings.Jump.value,
         function(value) Settings.Jump.value = value end,
-        Settings.Jump.enabled,
         Settings.Jump.value
     )
 
-    createToggleOnly(playerSection, "🌊 Float V1 (Wave Mode)",
-        function(enabled)
-            Settings.FloatV1.enabled = enabled
-            setupFloatV1()
-        end,
-        Settings.FloatV1.enabled
-    )
+    local canJump = true
+    createModernToggle(playerSection, "🦘", "Enable Jump", function(enabled)
+        Settings.Jump.enabled = enabled
+        ConnectionManager:remove("Jump")
+        if enabled then
+            ConnectionManager:add("Jump", UserInputService.JumpRequest:Connect(function()
+                if not canJump then return end
+                local char = LocalPlayer.Character
+                if not char then return end
+                local rootPart = Cache:get(char, "HumanoidRootPart")
+                if rootPart then
+                    canJump = false
+                    rootPart.Velocity = Vector3.new(rootPart.Velocity.X, Settings.Jump.value, rootPart.Velocity.Z)
+                    task.spawn(function()
+                        task.wait(1.5)
+                        canJump = true
+                    end)
+                end
+            end))
+            NotificationSystem:show("Jump Hack ativado!", "success")
+        else
+            NotificationSystem:show("Jump Hack desativado", "info")
+        end
+    end, Settings.Jump.enabled)
 
-    createToggleOnly(playerSection, "💨 Float V2 (Current Mode)",
-        function(enabled)
-            Settings.FloatV2.enabled = enabled
-            setupFloatV2()
-        end,
-        Settings.FloatV2.enabled
-    )
+    createModernToggle(playerSection, "🌊", "Float Mode V1", function(enabled)
+        Settings.FloatV1.enabled = enabled
+        setupFloatV1()
+        NotificationSystem:show(enabled and "Float V1 ativado!" or "Float V1 desativado", enabled and "success" or "info")
+    end, Settings.FloatV1.enabled)
 
-    createToggleOnly(playerSection, "🛡️ Anti-Hit (Shark Shield)",
-        function(enabled)
-            Settings.AntiHit.enabled = enabled
-            setupAntiHit()
-        end,
-        Settings.AntiHit.enabled
-    )
+    createModernToggle(playerSection, "💨", "Float Mode V2", function(enabled)
+        Settings.FloatV2.enabled = enabled
+        setupFloatV2()
+        NotificationSystem:show(enabled and "Float V2 ativado!" or "Float V2 desativado", enabled and "success" or "info")
+    end, Settings.FloatV2.enabled)
 
-    -- Controles da seção Helper
-    createToggleOnly(helperSection, "🎯 ESP Best Target",
-        function(enabled)
-            Settings.ESPBetter.enabled = enabled
-            setupESPBetter()
-        end,
-        Settings.ESPBetter.enabled
-    )
+    createModernToggle(playerSection, "🛡", "Anti-Hit Shield", function(enabled)
+        Settings.AntiHit.enabled = enabled
+        setupAntiHit()
+    end, Settings.AntiHit.enabled)
 
-    createToggleOnly(helperSection, "👁️ ESP Players",
-        function(enabled)
-            Settings.ESP.enabled = enabled
-            setupESPPlayers()
-        end,
-        Settings.ESP.enabled
-    )
+    -- Visual Section
+    createModernToggle(visualSection, "🎯", "ESP Best Target", function(enabled)
+        Settings.ESPBetter.enabled = enabled
+        setupESPBetter()
+        NotificationSystem:show(enabled and "ESP Target ativado!" or "ESP Target desativado", enabled and "success" or "info")
+    end, Settings.ESPBetter.enabled)
 
-    -- Seção de cores ESP
+    createModernToggle(visualSection, "👥", "ESP Players", function(enabled)
+        Settings.ESP.enabled = enabled
+        setupESPPlayers()
+        NotificationSystem:show(enabled and "ESP Players ativado!" or "ESP Players desativado", enabled and "success" or "info")
+    end, Settings.ESP.enabled)
+
+    -- Color Picker
     local colorFrame = Instance.new("Frame")
-    colorFrame.Size = UDim2.new(1, -4, 0, mobile and 78 or 200)
-    colorFrame.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
+    colorFrame.Size = UDim2.new(1, -10, 0, 150)
+    colorFrame.BackgroundColor3 = CurrentTheme.surface
     colorFrame.BorderSizePixel = 0
-    colorFrame.Parent = helperSection
+    colorFrame.Parent = visualSection
 
-    local colorFrameCorner = Instance.new("UICorner")
-    colorFrameCorner.CornerRadius = UDim.new(0, 8)
-    colorFrameCorner.Parent = colorFrame
-
-    local colorStroke = Instance.new("UIStroke")
-    colorStroke.Color = Color3.fromRGB(0, 162, 232)
-    colorStroke.Thickness = 1
-    colorStroke.Transparency = 0.5
-    colorStroke.Parent = colorFrame
-
-    local colorGradient = Instance.new("UIGradient")
-    colorGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
-    }
-    colorGradient.Rotation = 90
-    colorGradient.Parent = colorFrame
+    local colorCorner = Instance.new("UICorner")
+    colorCorner.CornerRadius = UDim.new(0, 12)
+    colorCorner.Parent = colorFrame
 
     local colorTitle = Instance.new("TextLabel")
-    colorTitle.Size = UDim2.new(1, -6, 0, mobile and 12 or 30)
-    colorTitle.Position = UDim2.new(0, 3, 0, 3)
+    colorTitle.Size = UDim2.new(1, -10, 0, 30)
+    colorTitle.Position = UDim2.new(0, 5, 0, 5)
     colorTitle.BackgroundTransparency = 1
-    colorTitle.Text = "🎨 ESP Ocean Colors"
-    colorTitle.TextColor3 = Color3.fromRGB(0, 255, 255)
-    colorTitle.TextSize = mobile and 8 or 18
+    colorTitle.Text = "🎨 ESP Colors"
+    colorTitle.TextColor3 = CurrentTheme.accent
+    colorTitle.TextSize = 16
     colorTitle.Font = Enum.Font.GothamBold
     colorTitle.TextXAlignment = Enum.TextXAlignment.Left
-    colorTitle.TextScaled = mobile
     colorTitle.Parent = colorFrame
 
     local colorGrid = Instance.new("Frame")
-    colorGrid.Size = UDim2.new(1, -8, 1, mobile and -16 or -40)
-    colorGrid.Position = UDim2.new(0, 4, 0, mobile and 14 or 35)
+    colorGrid.Size = UDim2.new(1, -10, 1, -40)
+    colorGrid.Position = UDim2.new(0, 5, 0, 35)
     colorGrid.BackgroundTransparency = 1
     colorGrid.Parent = colorFrame
 
     local gridLayout = Instance.new("UIGridLayout")
-    gridLayout.CellSize = UDim2.new(0, mobile and 58 or 110, 0, mobile and 18 or 35)
-    gridLayout.CellPadding = UDim2.new(0, mobile and 1 or 5, 0, mobile and 1 or 5)
-    gridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    gridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    gridLayout.CellSize = UDim2.new(0.25, -5, 0, 30)
+    gridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
     gridLayout.Parent = colorGrid
 
     for _, colorData in ipairs(ColorPalette) do
-        createColorButton(colorGrid, colorData, function(color)
-            Settings.ESP.color = color
+        local colorBtn = Instance.new("TextButton")
+        colorBtn.BackgroundColor3 = colorData.color
+        colorBtn.Text = colorData.name
+        colorBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        colorBtn.TextSize = 10
+        colorBtn.Font = Enum.Font.GothamBold
+        colorBtn.TextStrokeTransparency = 0.5
+        colorBtn.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+        colorBtn.BorderSizePixel = 0
+        colorBtn.Parent = colorGrid
+
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 6)
+        btnCorner.Parent = colorBtn
+
+        colorBtn.MouseButton1Click:Connect(function()
+            Settings.ESP.color = colorData.color
             if Settings.ESP.enabled then
-                for player, highlight in pairs(Settings.ESP.highlights) do
+                for _, highlight in pairs(Settings.ESP.highlights) do
                     if highlight and highlight.Parent then
-                        highlight.FillColor = color
-                        highlight.OutlineColor = color
+                        highlight.FillColor = colorData.color
+                        highlight.OutlineColor = colorData.color
                     end
                 end
-                for player, nametag in pairs(Settings.ESP.nametags) do
+                for _, nametag in pairs(Settings.ESP.nametags) do
                     if nametag and nametag.Parent then
-                        local nameLabel = nametag:FindFirstChild("TextLabel")
-                        if nameLabel then
-                            nameLabel.TextColor3 = color
+                        local label = nametag:FindFirstChild("TextLabel")
+                        if label then
+                            label.TextColor3 = colorData.color
                         end
                     end
                 end
             end
+            NotificationSystem:show("Cor alterada para " .. colorData.name, "info")
         end)
     end
 
-    -- Controles da seção Config CORRIGIDOS
-    local configInfo = Instance.new("Frame")
-    configInfo.Size = UDim2.new(1, 0, 0, mobile and 60 or 80)
-    configInfo.BackgroundColor3 = Color3.fromRGB(15, 30, 45)
-    configInfo.BorderSizePixel = 0
-    configInfo.Parent = configSection
+    -- Config Section
+    -- Theme Selector
+    local themeFrame = Instance.new("Frame")
+    themeFrame.Size = UDim2.new(1, -10, 0, 120)
+    themeFrame.BackgroundColor3 = CurrentTheme.surface
+    themeFrame.BorderSizePixel = 0
+    themeFrame.Parent = configSection
 
-    local infoCorner = Instance.new("UICorner")
-    infoCorner.CornerRadius = UDim.new(0, 8)
-    infoCorner.Parent = configInfo
+    local themeCorner = Instance.new("UICorner")
+    themeCorner.CornerRadius = UDim.new(0, 12)
+    themeCorner.Parent = themeFrame
 
-    local infoStroke = Instance.new("UIStroke")
-    infoStroke.Color = Color3.fromRGB(0, 162, 232)
-    infoStroke.Thickness = 1
-    infoStroke.Transparency = 0.5
-    infoStroke.Parent = configInfo
+    local themeTitle = Instance.new("TextLabel")
+    themeTitle.Size = UDim2.new(1, -10, 0, 30)
+    themeTitle.Position = UDim2.new(0, 5, 0, 5)
+    themeTitle.BackgroundTransparency = 1
+    themeTitle.Text = "🎨 Theme Selector"
+    themeTitle.TextColor3 = CurrentTheme.accent
+    themeTitle.TextSize = 16
+    themeTitle.Font = Enum.Font.GothamBold
+    themeTitle.TextXAlignment = Enum.TextXAlignment.Left
+    themeTitle.Parent = themeFrame
 
-    local infoGradient = Instance.new("UIGradient")
-    infoGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 30, 45)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 40, 70))
-    }
-    infoGradient.Rotation = 90
-    infoGradient.Parent = configInfo
+    local themeGrid = Instance.new("Frame")
+    themeGrid.Size = UDim2.new(1, -10, 1, -40)
+    themeGrid.Position = UDim2.new(0, 5, 0, 35)
+    themeGrid.BackgroundTransparency = 1
+    themeGrid.Parent = themeFrame
 
-    local infoLabel = Instance.new("TextLabel")
-    infoLabel.Size = UDim2.new(1, -10, 1, -10)
-    infoLabel.Position = UDim2.new(0, 5, 0, 5)
-    infoLabel.BackgroundTransparency = 1
-    infoLabel.Text = "💾 Save your settings\n📂 Load previous settings\n🔄 Reset to default"
-    infoLabel.TextColor3 = Color3.fromRGB(176, 224, 230)
-    infoLabel.TextSize = mobile and 8 or 14
-    infoLabel.Font = Enum.Font.Gotham
-    infoLabel.TextWrapped = true
-    infoLabel.TextScaled = mobile
-    infoLabel.Parent = configInfo
+    local themeGridLayout = Instance.new("UIGridLayout")
+    themeGridLayout.CellSize = UDim2.new(0.5, -5, 0, 35)
+    themeGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
+    themeGridLayout.Parent = themeGrid
 
-    local configButtonsFrame = Instance.new("Frame")
-    configButtonsFrame.Size = UDim2.new(1, 0, 0, mobile and 85 or 50)
-    configButtonsFrame.BackgroundTransparency = 1
-    configButtonsFrame.Parent = configSection
+    for themeName, themeColors in pairs(Themes) do
+        local themeBtn = Instance.new("TextButton")
+        themeBtn.BackgroundColor3 = themeColors.primary
+        themeBtn.Text = themeName
+        themeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        themeBtn.TextSize = 12
+        themeBtn.Font = Enum.Font.GothamBold
+        themeBtn.BorderSizePixel = 0
+        themeBtn.Parent = themeGrid
 
-    local configLayout = Instance.new("UIListLayout")
-    configLayout.FillDirection = mobile and Enum.FillDirection.Vertical or Enum.FillDirection.Horizontal
-    configLayout.Padding = UDim.new(0, mobile and 4 or 20)
-    configLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    configLayout.Parent = configButtonsFrame
+        local themeBtnCorner = Instance.new("UICorner")
+        themeBtnCorner.CornerRadius = UDim.new(0, 8)
+        themeBtnCorner.Parent = themeBtn
 
-    local function createConfigButton(text, color, callback)
+        local themeBtnGradient = Instance.new("UIGradient")
+        themeBtnGradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, themeColors.primary),
+            ColorSequenceKeypoint.new(1, themeColors.secondary)
+        }
+        themeBtnGradient.Rotation = 45
+        themeBtnGradient.Parent = themeBtn
+
+        themeBtn.MouseButton1Click:Connect(function()
+            Settings.Theme = themeName
+            CurrentTheme = Themes[themeName]
+            NotificationSystem:show("Tema alterado para " .. themeName, "success")
+            
+            -- Atualizar cores da UI
+            header.BackgroundColor3 = CurrentTheme.primary
+            headerGradient.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, CurrentTheme.primary),
+                ColorSequenceKeypoint.new(1, CurrentTheme.secondary)
+            }
+            mainFrame.BackgroundColor3 = CurrentTheme.background
+        end)
+    end
+
+    -- Config Buttons
+    local configButtons = Instance.new("Frame")
+    configButtons.Size = UDim2.new(1, -10, 0, 150)
+    configButtons.BackgroundTransparency = 1
+    configButtons.Parent = configSection
+
+    local btnLayout = Instance.new("UIListLayout")
+    btnLayout.Padding = UDim.new(0, 10)
+    btnLayout.Parent = configButtons
+
+    local function createConfigButton(text, icon, color, callback)
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, mobile and 210 or 120, 0, mobile and 22 or 40)
+        btn.Size = UDim2.new(1, 0, 0, 40)
         btn.BackgroundColor3 = color
-        btn.Text = text
+        btn.Text = icon .. " " .. text
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextSize = mobile and 9 or 16
+        btn.TextSize = 14
         btn.Font = Enum.Font.GothamBold
         btn.BorderSizePixel = 0
-        btn.Parent = configButtonsFrame
+        btn.Parent = configButtons
 
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 6)
-        corner.Parent = btn
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 10)
+        btnCorner.Parent = btn
 
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = color:Lerp(Color3.new(1, 1, 1), 0.3)
-        stroke.Thickness = 2
-        stroke.Transparency = 0.7
-        stroke.Parent = btn
+        local btnStroke = Instance.new("UIStroke")
+        btnStroke.Color = color:Lerp(Color3.new(0, 0, 0), 0.2)
+        btnStroke.Thickness = 2
+        btnStroke.Transparency = 0.7
+        btnStroke.Parent = btn
 
-        -- Efeito hover/press
         btn.MouseEnter:Connect(function()
             TweenService:Create(btn, TweenInfo.new(0.2), {
-                BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.2)
+                BackgroundColor3 = color:Lerp(Color3.new(1, 1, 1), 0.1)
             }):Play()
         end)
 
@@ -1630,65 +1495,199 @@ local function createUI()
             }):Play()
         end)
 
-        btn.MouseButton1Click:Connect(callback)
+        btn.MouseButton1Click:Connect(function()
+            -- Efeito de clique
+            local clickEffect = Instance.new("Frame")
+            clickEffect.Size = UDim2.new(0, 0, 0, 0)
+            clickEffect.Position = UDim2.new(0.5, 0, 0.5, 0)
+            clickEffect.AnchorPoint = Vector2.new(0.5, 0.5)
+            clickEffect.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            clickEffect.BackgroundTransparency = 0.5
+            clickEffect.BorderSizePixel = 0
+            clickEffect.Parent = btn
+
+            local effectCorner = Instance.new("UICorner")
+            effectCorner.CornerRadius = UDim.new(0, 10)
+            effectCorner.Parent = clickEffect
+
+            TweenService:Create(clickEffect, TweenInfo.new(0.5), {
+                Size = UDim2.new(1, 0, 1, 0),
+                BackgroundTransparency = 1
+            }):Play()
+
+            task.wait(0.5)
+            clickEffect:Destroy()
+            
+            callback()
+        end)
+
         return btn
     end
 
-    local saveBtn = createConfigButton("💾 Save", Color3.fromRGB(34, 139, 34), function()
-        task.spawn(function()
-            local originalText = saveBtn.Text
-            local success = saveConfig()
-            saveBtn.Text = success and "✅ Saved!" or "❌ Error!"
-            task.wait(2)
-            saveBtn.Text = originalText
-        end)
+    createConfigButton("Save Configuration", "💾", Color3.fromRGB(34, 139, 34), function()
+        local success = saveConfig()
+        NotificationSystem:show(success and "Configuração salva!" or "Erro ao salvar", success and "success" or "error")
     end)
 
-    local loadBtn = createConfigButton("📂 Load", Color3.fromRGB(0, 100, 148), function()
-        task.spawn(function()
-            local originalText = loadBtn.Text
-            local success = loadConfig()
-            loadBtn.Text = success and "✅ Loaded!" or "❌ No Config!"
-            task.wait(2)
-            loadBtn.Text = originalText
-        end)
+    createConfigButton("Load Configuration", "📂", Color3.fromRGB(30, 144, 255), function()
+        local success = loadConfig()
+        NotificationSystem:show(success and "Configuração carregada!" or "Nenhuma configuração encontrada", success and "success" or "error")
+        if success then
+            -- Atualizar UI com valores carregados
+            switchTab(currentTab) -- Refresh current tab
+        end
     end)
 
-    local resetBtn = createConfigButton("🔄 Reset", Color3.fromRGB(220, 20, 60), function()
-        task.spawn(function()
-            local originalText = resetBtn.Text
-            local success = resetConfig()
-            resetBtn.Text = success and "✅ Reset!" or "❌ Error!"
-            task.wait(2)
-            resetBtn.Text = originalText
-        end)
+    createConfigButton("Reset to Default", "🔄", Color3.fromRGB(220, 20, 60), function()
+        local success = resetConfig()
+        NotificationSystem:show(success and "Configuração resetada!" or "Erro ao resetar", success and "success" or "error")
+        if success then
+            cleanupExistingGUI()
+            createUI()
+        end
     end)
 
-    -- Botão fechar com animação
-    closeBtn.MouseButton1Click:Connect(function()
-        local closeTween = TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+    -- Info Panel
+    local infoFrame = Instance.new("Frame")
+    infoFrame.Size = UDim2.new(1, -10, 0, 80)
+    infoFrame.BackgroundColor3 = CurrentTheme.surface
+    infoFrame.BorderSizePixel = 0
+    infoFrame.Parent = configSection
+
+    local infoCorner = Instance.new("UICorner")
+    infoCorner.CornerRadius = UDim.new(0, 12)
+    infoCorner.Parent = infoFrame
+
+    local infoText = Instance.new("TextLabel")
+    infoText.Size = UDim2.new(1, -20, 1, -20)
+    infoText.Position = UDim2.new(0, 10, 0, 10)
+    infoText.BackgroundTransparency = 1
+    infoText.Text = "SharkHUB Premium v2.0\nDeveloped with ❤️\n\nSupport: discord.gg/sharkhub"
+    infoText.TextColor3 = CurrentTheme.accent
+    infoText.TextSize = 12
+    infoText.Font = Enum.Font.Gotham
+    infoText.TextWrapped = true
+    infoText.Parent = infoFrame
+
+    -- Minimized UI
+    local minimizedFrame = Instance.new("Frame")
+    minimizedFrame.Size = UDim2.new(0, 60, 0, 60)
+    minimizedFrame.Position = UDim2.new(0, 20, 0.5, -30)
+    minimizedFrame.BackgroundColor3 = CurrentTheme.primary
+    minimizedFrame.BorderSizePixel = 0
+    minimizedFrame.Visible = false
+    minimizedFrame.Parent = screenGui
+
+    local miniCorner = Instance.new("UICorner")
+    miniCorner.CornerRadius = UDim.new(0, 15)
+    miniCorner.Parent = minimizedFrame
+
+    local miniGradient = Instance.new("UIGradient")
+    miniGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, CurrentTheme.primary),
+        ColorSequenceKeypoint.new(1, CurrentTheme.secondary)
+    }
+    miniGradient.Rotation = 135
+    miniGradient.Parent = minimizedFrame
+
+    local miniShadow = Instance.new("UIStroke")
+    miniShadow.Color = Color3.fromRGB(0, 0, 0)
+    miniShadow.Thickness = 3
+    miniShadow.Transparency = 0.7
+    miniShadow.Parent = minimizedFrame
+
+    local miniIcon = Instance.new("TextLabel")
+    miniIcon.Size = UDim2.new(1, 0, 1, 0)
+    miniIcon.BackgroundTransparency = 1
+    miniIcon.Text = "🦈"
+    miniIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+    miniIcon.TextSize = 30
+    miniIcon.Font = Enum.Font.GothamBold
+    miniIcon.Parent = minimizedFrame
+
+    local miniButton = Instance.new("TextButton")
+    miniButton.Size = UDim2.new(1, 0, 1, 0)
+    miniButton.BackgroundTransparency = 1
+    miniButton.Text = ""
+    miniButton.Parent = minimizedFrame
+
+    -- Animação de pulse no minimizado
+    task.spawn(function()
+        while minimizedFrame do
+            if minimizedFrame.Visible then
+                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    TextSize = 35
+                }):Play()
+                task.wait(1)
+                TweenService:Create(miniIcon, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    TextSize = 30
+                }):Play()
+                task.wait(1)
+            else
+                task.wait(2)
+            end
+        end
+    end)
+
+    -- Setup drag
+    setupDrag(mainFrame, header)
+    setupDrag(minimizedFrame, minimizedFrame)
+
+    -- Minimize button
+    minimizeBtn.MouseButton1Click:Connect(function()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, 0),
-            Position = UDim2.new(0.5, 0, 0.5, 0)
+            Position = minimizedFrame.Position
         }):Play()
+        
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
         
         task.wait(0.3)
         mainFrame.Visible = false
         minimizedFrame.Visible = true
         
-        -- Animação da UI minimizada
-        minimizedFrame.Size = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, mobile and 50 or 60, 0, mobile and 50 or 60)
+        TweenService:Create(minimizedFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, 60, 0, 60)
         }):Play()
+    end)
+
+    -- Restore from minimized
+    miniButton.MouseButton1Click:Connect(function()
+        minimizedFrame.Visible = false
+        mainFrame.Visible = true
+        mainFrame.Size = UDim2.new(0, 0, 0, 0)
+        mainFrame.Position = minimizedFrame.Position
+        
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 10}):Play()
+        
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+            Size = UDim2.new(0, mobile and 280 or 500, 0, mobile and 400 or 600),
+            Position = UDim2.new(0.5, 0, 0.5, 0)
+        }):Play()
+    end)
+
+    -- Close button
+    closeBtn.MouseButton1Click:Connect(function()
+        TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, 0)
+        }):Play()
+        
+        TweenService:Create(blur, TweenInfo.new(0.3), {Size = 0}):Play()
+        
+        task.wait(0.3)
+        cleanup()
+        blur:Destroy()
     end)
 end
 
--- Cleanup completo
+-- Cleanup
 local function cleanup()
     ConnectionManager:cleanup()
+    
     if currentESP then currentESP:Destroy() currentESP = nil end
     for _, hl in pairs(highlights) do if hl and hl.Parent then hl:Destroy() end end
     highlights = {}
+    
     for _, highlight in pairs(Settings.ESP.highlights) do
         if highlight and highlight.Parent then highlight:Destroy() end
     end
@@ -1697,6 +1696,7 @@ local function cleanup()
     end
     Settings.ESP.highlights = {}
     Settings.ESP.nametags = {}
+    
     Cache:clear()
     StateManager:set("floatV1", false)
     StateManager:set("floatV2", false)
@@ -1712,7 +1712,7 @@ local function cleanup()
     cleanupExistingGUI()
 end
 
--- Event cleanup
+-- Events
 Players.PlayerRemoving:Connect(function(player)
     if player == LocalPlayer then cleanup() end
 end)
@@ -1726,11 +1726,12 @@ LocalPlayer.CharacterAdded:Connect(function()
                 setfflag("WorldStepMax", "-1")
             end
         end)
-        print("⚠️ Anti-Hit desativado ao respawnar - Reative se necessário")
+        NotificationSystem:show("Anti-Hit desativado ao respawnar", "info")
     end
 end)
 
 -- Inicializar
 createUI()
-print("🦈 SharkHUB Script carregado com sucesso!")
-print("🌊 Versão Premium com tema oceânico e configurações funcionais")
+NotificationSystem:show("SharkHUB Premium carregado!", "success")
+print("🦈 SharkHUB Premium v2.0 - Interface Ultra Moderna")
+print("💎 Desenvolvido com animações fluidas e design responsivo")
